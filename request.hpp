@@ -25,6 +25,8 @@ class Request{
         std::string getBody();
         ~Request();
         void parseRequest(std::string request);
+        void method_handler(std::string method);
+        void post_handler(std::string body);
 };
 
 #endif

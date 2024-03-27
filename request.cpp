@@ -49,28 +49,28 @@ void Request::parseRequest(std::string req)
     int i = 0;
     int pip = 0;
     pip = req.find("\r\n");
-    std::cout<<"===>"<<pip<<std::endl;
-    std::string line = req.substr(0, pip);
-    while(line[i])
+   // std::cout<<"===>"<<pip<<std::endl;
+    std::string reqline = req.substr(0, pip);
+    while(reqline[i])
     {
-        if(line[i] == ' ')
+        if(reqline[i] == ' ')
         {
-            this->method = line.substr(0, i);
+            this->method = reqline.substr(0, i);
             break;
         }
         i++;
     }
     int j = i+1;
-    while(line[j])
+    while(reqline[j])
     {
-        if(line[j] == ' ')
+        if(reqline[j] == ' ')
         {
-            this->path = line.substr(i+1, j-i-1);
+            this->path = reqline.substr(i+1, j-i-1);
             break;
         }
         j++;
     }
-    this->version = line.substr(j+1, line.length()-j-1);
+    this->version = reqline.substr(j+1, reqline.length()-j-1);
     i = pip+2;
     while(req[i] != '\r' && req[i+1] != '\n')
     {
@@ -85,20 +85,55 @@ void Request::parseRequest(std::string req)
         // std::cout<<"**////===>"<<value<<std::endl;
         i = l+2;
     }
+    i += 2;
+    std::cout<<"===>"<<i<<std::endl;
+    std::cout<<"===>"<<req.length()-i<<std::endl;
+    std::cout<<"===>"<<req.length()<<std::endl;
+    this->body = req.substr(i, req.length()-i);
 }
-int main()
+
+void Request::method_handler(std::string method)
 {
-    Request req;
-    req.parseRequest("GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n");
-    std::cout << req.getMethod() << std::endl;
-    std::cout << req.getPath() << std::endl;
-    std::cout << req.getVersion() << std::endl;
-    std::cout<<"-----------------Headers-----------------"<<std::endl;
-    std::map<std::string, std::string> headers = req.getHeaders();
-    std::map<std::string, std::string>::iterator it;
-    for( it = headers.begin(); it != headers.end(); it++)
+    if(method == "GET")
     {
-        std::cout << it->first << "||" << it->second << std::endl;
+        //
     }
-    return 0;
+    else if(method == "DELETE")
+    {
+        //
+    }
+    else if(method == "POST")
+    {
+        post_handler(this->body);
+    }
+    else
+    {
+        std::cout<<"Invalid Method"<<std::endl;
+    }
 }
+
+void Request::post_handler(std::string body)
+{
+    std::ofstream o;
+    std::string filename = "post.txt";
+	o.open(filename.c_str());
+    o << body;
+    o.close();
+}
+
+// int main()
+// {
+//     Request req;
+//     req.parseRequest("GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n");
+//     std::cout << req.getMethod() << std::endl;
+//     std::cout << req.getPath() << std::endl;
+//     std::cout << req.getVersion() << std::endl;
+//     std::cout<<"-----------------Headers-----------------"<<std::endl;
+//     std::map<std::string, std::string> headers = req.getHeaders();
+//     std::map<std::string, std::string>::iterator it;
+//     for( it = headers.begin(); it != headers.end(); it++)
+//     {
+//         std::cout << it->first << "||" << it->second << std::endl;
+//     }
+//     return 0;
+// }
