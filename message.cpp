@@ -3,7 +3,7 @@
 
 int main() {
     int j = 0;
-    Request req;
+    Request req;std::string reqstr;
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1) {
         perror("Error creating socket");
@@ -94,26 +94,23 @@ int main() {
                     if (current->getSocketDescriptor() == fd) {
                        // vector<char> buffer(BUFFER_SIZE);
                         ssize_t bytesRead = recv(fd, current->getBuffer(), BUFFER_SIZE, 0);
-                        std::cout<<"jjjjjjjjj"<<std::endl;
-                        //cout<<"------------"<<endl;
-                        //cout << current->getBuffer() << endl;
-                        //cout << "bytesRead = " << bytesRead << endl;
+                        //std::cout<<current->getBuffer()<<std::endl;
                         if (bytesRead <= 0) {
                             // Connection closed or error
-                            if (bytesRead == 0) {
+                            if (bytesRead == 0)
                                 std::cout << "Client " << fd << " disconnected.\n";
-                            } else {
+                            else 
                                 perror("Error receiving data");
-                            }
                             close(fd);
-                        } else {
+                        } 
+                        else {
                             // Process received data
                             current->getBuffer()[bytesRead] = '\0';
                             current->setBytesRead(bytesRead);
-                            std::cout<<current->getBuffer()<<std::endl;
-                            std::string reqstr(current->getBuffer(),bytesRead);
+                            std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
+                            
+                            reqstr.append(current->getBuffer(), bytesRead);
                             req.parseRequest(reqstr);
-                            req.method_handler(req.getMethod());
                         }
                         break;
                     }
@@ -122,7 +119,7 @@ int main() {
             }
         }
     }
-
+    
     // Close all client sockets and delete client objects
     Client* current = head;
     while (current != nullptr) {

@@ -75,21 +75,15 @@ void Request::parseRequest(std::string req)
     while(req[i] != '\r' && req[i+1] != '\n')
     {
         int k = req.find(":", i);
-        //std::cout<<"//===>"<<k<<std::endl;
         std::string key = req.substr(i, k-i);
         int l = req.find("\r\n", k);
-        // std::cout<<"////===>"<<l<<std::endl;
         std::string value = req.substr(k+2, l-k-2);
         this->headers[key] = value;
-        // std::cout<<"***////===>"<<key<<std::endl;
-        // std::cout<<"**////===>"<<value<<std::endl;
         i = l+2;
     }
     i += 2;
-    std::cout<<"===>"<<i<<std::endl;
-    std::cout<<"===>"<<req.length()-i<<std::endl;
-    std::cout<<"===>"<<req.length()<<std::endl;
     this->body = req.substr(i, req.length()-i);
+    method_handler(this->method);
 }
 
 void Request::method_handler(std::string method)
@@ -112,10 +106,53 @@ void Request::method_handler(std::string method)
     }
 }
 
+std::string Request::content_type_handler()
+{
+    std::map<std::string, std::string>::iterator it;
+    for(it = this->headers.begin(); it != this->headers.end(); it++)
+    {
+        if(it->first == "Content-Type")
+        {
+            if(it->second == "application/json")
+                return(".json");
+            else if(it->second == "text/css")
+                return(".css");
+            else if(it->second == "image/gif")
+                return(".gif");
+            else if(it->second == "text/csv")
+                return(".csv");
+            else if(it->second == "text/html")
+                return(".html");
+            else if(it->second == "image/jpeg")
+                return(".jpeg");
+            else if(it->second == "text/javascript")
+                return(".js");
+            else if(it->second == "image/png")
+                return(".png");
+            else if(it->second == "text/plain")
+                return(".txt");
+            else if(it->second == "image/svg+xml")
+                return(".svg");
+            else if(it->second == "application/pdf")
+                return(".pdf");
+            else if(it->second == "image/x-icon")
+                return(".ico");
+            else if(it->second == "video/mp4")
+                return(".mp4");
+            else if(it->second == "audio/mpeg")
+                return(".mp3");
+            else
+                std::cout<<"Invalid Content-Type"<<std::endl;
+        }
+    }
+    return (0);
+}
+
 void Request::post_handler(std::string body)
 {
     std::ofstream o;
-    std::string filename = "post.txt";
+
+    std::string filename = "post" + content_type_handler();
 	o.open(filename.c_str());
     o << body;
     o.close();
