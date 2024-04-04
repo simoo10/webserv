@@ -1,6 +1,8 @@
 #include "message.hpp"
 #include"request.hpp"
 
+
+
 int main() {
     int j = 0;
     Request req;std::string reqstr;
@@ -92,7 +94,7 @@ int main() {
                 Client* current = head;
                 while (current != nullptr) {
                     if (current->getSocketDescriptor() == fd) {
-                       // vector<char> buffer(BUFFER_SIZE);
+                      // vector<char> buffer(BUFFER_SIZE);
                         ssize_t bytesRead = recv(fd, current->getBuffer(), BUFFER_SIZE, 0);
                         //std::cout<<current->getBuffer()<<std::endl;
                         if (bytesRead <= 0) {
@@ -108,12 +110,18 @@ int main() {
                             current->getBuffer()[bytesRead] = '\0';
                             current->setBytesRead(bytesRead);
                             std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
-                            
                             reqstr.append(current->getBuffer(), bytesRead);
+                            if(reqstr.find("\r\n\r\n") == std::string::npos)
+                            {
+                                std::cout<<"===+++++++++++++=================="<<std::endl;
+                                current = current->getNext();
+                                continue;
+                            }
                             req.parseRequest(reqstr);
                         }
                         break;
                     }
+                    
                     current = current->getNext();
                 }
             }

@@ -1,5 +1,5 @@
 #include"request.hpp"
-
+#include<unistd.h>
 Request::Request(){
     this->method = "";
     this->path = "";
@@ -44,33 +44,88 @@ Request::~Request(){
     this->body = "";
 }
 
+// int Request::recieveRequest(int fd){
+//     std::string reqstr;
+//     ssize_t bytesRead = recv(fd, buffer, BUFFER_SIZE, 0);
+//     std::cout<<"bytesRead===>"<<bytesRead<<std::endl; 
+//     //std::cout<<buffer<<std::endl;
+//     if (bytesRead <= 0) {
+//         if (bytesRead == 0)
+//             std::cout << "Client " << fd << " disconnected.\n";
+//         else 
+//             perror("Error receiving data");
+//         close(fd);
+//     } 
+//     else {
+        
+//         buffer[bytesRead] = '\0';std::cout<<"pppppppppppppp"<<std::endl;
+//        // current->setBytesRead(bytesRead);
+//         std::cout<<"qqqqqqqqqqqqqqqqqq"<<std::endl;
+//         std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
+//         reqstr.append(buffer, bytesRead);
+//          if(reqstr.find("\r\n\r\n") == std::string::npos)
+//         {
+//             std::cout<<"===+++++++++++++=================="<<std::endl;
+//             return(1);
+//         }
+//         std::cout<<"----------------------"<<std::endl;
+//         std::cout<<reqstr<<std::endl;
+//         parseRequest(reqstr);
+//     }
+//     return(0);
+// }
+
+
+void Request::takeRequest(std::string filename)
+{
+    std::ifstream i;
+    i.open(filename.c_str());
+    std::string req;
+    std::string line;
+    while(getline(i, line))
+    {
+        req += line;
+        req += "\r\n";
+    }
+    i.close();
+    parseRequest(req);
+}
+
 void Request::parseRequest(std::string req)
 {
     int i = 0;
     int pip = 0;
     pip = req.find("\r\n");
-   // std::cout<<"===>"<<pip<<std::endl;
+    std::cout<<"req===>"<<req<<std::endl; 
     std::string reqline = req.substr(0, pip);
     while(reqline[i])
     {
         if(reqline[i] == ' ')
         {
+            std::cout<<"-------------------------"<<std::endl;
             this->method = reqline.substr(0, i);
+            std::cout<<"====================="<<std::endl;
             break;
         }
         i++;
     }
+    
     int j = i+1;
+    
     while(reqline[j])
     {
         if(reqline[j] == ' ')
         {
+            //std::cout<<"-------------------------"<<std::endl;
             this->path = reqline.substr(i+1, j-i-1);
+            //std::cout<<"====================="<<std::endl;
             break;
         }
         j++;
     }
-    this->version = reqline.substr(j+1, reqline.length()-j-1);
+    std::cout<<"reqline.length()-j-1==="<<reqline.length()<<std::endl;
+    std::cout<<"j+1==="<<j+1<<std::endl;
+    this->version = reqline.substr(j+1, reqline.length()-j-1);std::cout<<"====================="<<std::endl;
     i = pip+2;
     while(req[i] != '\r' && req[i+1] != '\n')
     {
@@ -82,7 +137,9 @@ void Request::parseRequest(std::string req)
         i = l+2;
     }
     i += 2;
-    this->body = req.substr(i, req.length()-i);
+    std::cout<<"===>"<<path<<std::endl;
+    if(i < req.length())
+        this->body = req.substr(i, req.length()-i);
     method_handler(this->method);
 }
 
@@ -109,41 +166,25 @@ void Request::method_handler(std::string method)
 std::string Request::content_type_handler()
 {
     std::map<std::string, std::string>::iterator it;
+    std::map<std::string,std::string>contenttype;
+    contenttype["application/json"] = ".json";
+    contenttype["text/css"] = ".css";
+    contenttype["image/gif"] = ".gif";
+    contenttype["text/csv"] = ".csv";
+    contenttype["text/html"] = ".html";
+    contenttype["image/jpeg"] = ".jpeg";
+    contenttype["text/javascript"] = ".js";
+    contenttype["image/png"] = ".png";
+    contenttype["text/plain"] = ".txt";
+    contenttype["image/svg+xml"] = ".svg";
+    contenttype["application/pdf"] = ".pdf";
+    contenttype["image/x-icon"] = ".ico";
+    contenttype["video/mp4"] = ".mp4";
+
     for(it = this->headers.begin(); it != this->headers.end(); it++)
     {
         if(it->first == "Content-Type")
-        {
-            if(it->second == "application/json")
-                return(".json");
-            else if(it->second == "text/css")
-                return(".css");
-            else if(it->second == "image/gif")
-                return(".gif");
-            else if(it->second == "text/csv")
-                return(".csv");
-            else if(it->second == "text/html")
-                return(".html");
-            else if(it->second == "image/jpeg")
-                return(".jpeg");
-            else if(it->second == "text/javascript")
-                return(".js");
-            else if(it->second == "image/png")
-                return(".png");
-            else if(it->second == "text/plain")
-                return(".txt");
-            else if(it->second == "image/svg+xml")
-                return(".svg");
-            else if(it->second == "application/pdf")
-                return(".pdf");
-            else if(it->second == "image/x-icon")
-                return(".ico");
-            else if(it->second == "video/mp4")
-                return(".mp4");
-            else if(it->second == "audio/mpeg")
-                return(".mp3");
-            else
-                std::cout<<"Invalid Content-Type"<<std::endl;
-        }
+            return(contenttype[it->second]);
     }
     return (0);
 }
@@ -151,12 +192,21 @@ std::string Request::content_type_handler()
 void Request::post_handler(std::string body)
 {
     std::ofstream o;
+    if(body.empty())
+        return;
 
     std::string filename = "post" + content_type_handler();
 	o.open(filename.c_str());
     o << body;
     o.close();
 }
+
+void Request::chunked_request_handler()
+{
+   
+}
+
+
 
 // int main()
 // {
@@ -174,3 +224,4 @@ void Request::post_handler(std::string body)
 //     }
 //     return 0;
 // }
+
