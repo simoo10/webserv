@@ -33,7 +33,7 @@ class Request{
         void method_handler(std::string method);
         void post_handler(std::string body);
         std::string content_type_handler();
-        void chunked_request_handler();
+        void chunked_request_handler(std::string bd);
 };
 
 #endif

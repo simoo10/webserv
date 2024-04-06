@@ -139,7 +139,17 @@ void Request::parseRequest(std::string req)
     i += 2;
     std::cout<<"===>"<<path<<std::endl;
     if(i < req.length())
-        this->body = req.substr(i, req.length()-i);
+    {
+        if(headers["Transfer-Encoding"]=="chunked")
+        {
+            //std::cout<<"=============aaaaaaaaaaa========="<<std::endl;
+           // exit(0);
+            chunked_request_handler(req.substr(i, req.length()-i));
+            
+        }
+        else
+            this->body = req.substr(i, req.length()-i);
+    }
     method_handler(this->method);
 }
 
@@ -155,7 +165,18 @@ void Request::method_handler(std::string method)
     }
     else if(method == "POST")
     {
-        post_handler(this->body);
+        // if(headers["Transfer-Encoding"]=="chunked")
+        // {
+        //     //std::cout<<"=============aaaaaaaaaaa========="<<std::endl;
+        //    // exit(0);
+        //    // chunked_request_handler();
+            
+        // }
+        else
+        {
+        //     std::cout<<"aaaaaaaaaaaaaaaa"<<std::endl;
+            post_handler(this->body);
+        // }
     }
     else
     {
@@ -200,10 +221,37 @@ void Request::post_handler(std::string body)
     o << body;
     o.close();
 }
-
-void Request::chunked_request_handler()
+int hexatoint(string hex)
 {
-   
+    int chunksize = 0;
+    for(int i = 0; i < hex.length(); i++)
+    {
+        if(hex[i] >= '0' && hex[i] <= '9')
+            chunksize = chunksize*16 + hex[i] - '0';
+        else if(hex[i] >= 'A' && hex[i] <= 'F')
+            chunksize = chunksize*16 + hex[i] - 'A' + 10;
+        else if(hex[i] >= 'a' && hex[i] <= 'f')
+            chunksize = chunksize*16 + hex[i] - 'a' + 10;
+    }
+    return (chunksize);
+
+}
+
+void Request::chunked_request_handler(std::string bd)
+{
+    std::string chunk;
+    int i = 0;
+    while(i<bd.length())
+    {
+        int pip = bd.find("\r\n", i);
+        int chunksize = hexatoint(bd.substr(i, pip-i));
+        if(chunksize == 0)
+            break;
+        i = pip+2;
+        chunk.append(bd.substr(i, chunksize));
+        i += chunksize+2;
+    }
+    post_handler(chunk);
 }
 
 
