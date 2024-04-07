@@ -109,11 +109,11 @@ int main() {
                             // Process received data
                             current->getBuffer()[bytesRead] = '\0';
                             current->setBytesRead(bytesRead);
-                            std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
+                           // std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
                             reqstr.append(current->getBuffer(), bytesRead);
                             if(reqstr.find("\r\n\r\n") == std::string::npos)
                             {
-                                std::cout<<"===+++++++++++++=================="<<std::endl;
+                                //std::cout<<"===+++++++++++++=================="<<std::endl;
                                 current = current->getNext();
                                 continue;
                             }

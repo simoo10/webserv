@@ -75,57 +75,32 @@ Request::~Request(){
 //     return(0);
 // }
 
-
-void Request::takeRequest(std::string filename)
-{
-    std::ifstream i;
-    i.open(filename.c_str());
-    std::string req;
-    std::string line;
-    while(getline(i, line))
-    {
-        req += line;
-        req += "\r\n";
-    }
-    i.close();
-    parseRequest(req);
-}
-
 void Request::parseRequest(std::string req)
 {
     int i = 0;
     int pip = 0;
-    pip = req.find("\r\n");
-    std::cout<<"req===>"<<req<<std::endl; 
+    pip = req.find("\r\n"); 
     std::string reqline = req.substr(0, pip);
     while(reqline[i])
     {
         if(reqline[i] == ' ')
         {
-            std::cout<<"-------------------------"<<std::endl;
             this->method = reqline.substr(0, i);
-            std::cout<<"====================="<<std::endl;
             break;
         }
         i++;
-    }
-    
-    int j = i+1;
-    
+    }  
+    int j = i+1; 
     while(reqline[j])
     {
         if(reqline[j] == ' ')
         {
-            //std::cout<<"-------------------------"<<std::endl;
             this->path = reqline.substr(i+1, j-i-1);
-            //std::cout<<"====================="<<std::endl;
             break;
         }
         j++;
     }
-    std::cout<<"reqline.length()-j-1==="<<reqline.length()<<std::endl;
-    std::cout<<"j+1==="<<j+1<<std::endl;
-    this->version = reqline.substr(j+1, reqline.length()-j-1);std::cout<<"====================="<<std::endl;
+    this->version = reqline.substr(j+1, reqline.length()-j-1);
     i = pip+2;
     while(req[i] != '\r' && req[i+1] != '\n')
     {
@@ -137,20 +112,18 @@ void Request::parseRequest(std::string req)
         i = l+2;
     }
     i += 2;
-    std::cout<<"===>"<<path<<std::endl;
     if(i < req.length())
     {
         if(headers["Transfer-Encoding"]=="chunked")
         {
-            //std::cout<<"=============aaaaaaaaaaa========="<<std::endl;
-           // exit(0);
             chunked_request_handler(req.substr(i, req.length()-i));
-            
         }
         else
+        {
             this->body = req.substr(i, req.length()-i);
+            method_handler(this->method);
+        }
     }
-    method_handler(this->method);
 }
 
 void Request::method_handler(std::string method)
@@ -165,18 +138,7 @@ void Request::method_handler(std::string method)
     }
     else if(method == "POST")
     {
-        // if(headers["Transfer-Encoding"]=="chunked")
-        // {
-        //     //std::cout<<"=============aaaaaaaaaaa========="<<std::endl;
-        //    // exit(0);
-        //    // chunked_request_handler();
-            
-        // }
-        else
-        {
-        //     std::cout<<"aaaaaaaaaaaaaaaa"<<std::endl;
-            post_handler(this->body);
-        // }
+        post_handler(this->body);
     }
     else
     {
@@ -215,11 +177,14 @@ void Request::post_handler(std::string body)
     std::ofstream o;
     if(body.empty())
         return;
-
+    std::string value = headers["Content-Length"];
+    if(body.length()==std::atoi(value.c_str()))
+    {
     std::string filename = "post" + content_type_handler();
 	o.open(filename.c_str());
     o << body;
     o.close();
+    }
 }
 int hexatoint(string hex)
 {
@@ -253,23 +218,3 @@ void Request::chunked_request_handler(std::string bd)
     }
     post_handler(chunk);
 }
-
-
-
-// int main()
-// {
-//     Request req;
-//     req.parseRequest("GET / HTTP/1.1\r\nHost: localhost:8080\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n");
-//     std::cout << req.getMethod() << std::endl;
-//     std::cout << req.getPath() << std::endl;
-//     std::cout << req.getVersion() << std::endl;
-//     std::cout<<"-----------------Headers-----------------"<<std::endl;
-//     std::map<std::string, std::string> headers = req.getHeaders();
-//     std::map<std::string, std::string>::iterator it;
-//     for( it = headers.begin(); it != headers.end(); it++)
-//     {
-//         std::cout << it->first << "||" << it->second << std::endl;
-//     }
-//     return 0;
-// }
-

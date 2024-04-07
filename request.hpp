@@ -29,7 +29,7 @@ class Request{
         ~Request();
         int recieveRequest(int clientSocket);
         void takeRequest(std::string filename);
-        void parseRequest(std::string request);
+        void parseRequest( std::string request);
         void method_handler(std::string method);
         void post_handler(std::string body);
         std::string content_type_handler();
