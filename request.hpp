@@ -17,6 +17,7 @@ class Request{
         std::string version;
         std::map<std::string, std::string> headers;
         std::string body;
+        int status;
     public:
         Client *current;
         Request();
@@ -34,6 +35,7 @@ class Request{
         void post_handler(std::string body);
         std::string content_type_handler();
         void chunked_request_handler(std::string bd);
+        void request_status_code();
 };
 
 #endif

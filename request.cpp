@@ -6,6 +6,7 @@ Request::Request(){
     this->version = "";
     this->headers = std::map<std::string, std::string>();
     this->body = "";
+    this->status = 200;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -115,7 +116,7 @@ void Request::parseRequest(std::string req)
     if(i < req.length())
     {
         if(headers["Transfer-Encoding"]=="chunked")
-        {
+        {    
             chunked_request_handler(req.substr(i, req.length()-i));
         }
         else
@@ -206,15 +207,61 @@ void Request::chunked_request_handler(std::string bd)
 {
     std::string chunk;
     int i = 0;
+    int chunksize=0 ;
     while(i<bd.length())
     {
         int pip = bd.find("\r\n", i);
-        int chunksize = hexatoint(bd.substr(i, pip-i));
+        if (pip == std::string::npos) {
+            std::cerr << "Error" << std::endl;
+            return;
+        }
+        chunksize = hexatoint(bd.substr(i, pip-i));
         if(chunksize == 0)
             break;
         i = pip+2;
+        if (i + chunksize > bd.length()) {
+            std::cerr << "Error: Incomplete data" << std::endl;
+            return;
+        }
         chunk.append(bd.substr(i, chunksize));
         i += chunksize+2;
     }
     post_handler(chunk);
+}
+
+void Request::request_status_code()
+{ 
+    if(method.empty() || path.empty() || version.empty())
+        status = 400;
+    else if(path.length() > 2048)
+        status = 414;
+    else if(version != "HTTP/1.1")
+        status = 505;
+    else if(method != "GET" && method != "POST" && method != "DELETE")
+    {
+        if(method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "TRACE" || method == "CONNECT")
+            status = 501;
+        else
+            status = 400;
+    }
+    else if(method == "POST" )
+    {
+        if(headers.find("Content-Length") == headers.end() && headers.find("Transfer-Encoding") == headers.end())
+            status = 411;
+        else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") != headers.end())
+            status = 400;
+        else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") == headers.end())
+        {
+            if(headers["Content-Length"] == "0")
+                status = 400;
+        }
+        else if(headers.find("Transfer-Encoding") != headers.end() && headers.find("Content-Length") == headers.end())
+        {
+            if(headers["Transfer-Encoding"] != "chunked")
+                status = 400;
+        }
+        else if(headers.find("Content-Type") == headers.end())
+            status = 400;
+        
+    }
 }
