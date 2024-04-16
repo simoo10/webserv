@@ -143,7 +143,7 @@ int Request::parseRequest(char *req,int bytesRead)
         // else
         //{
             //this->body = req.substr(i, req.length()-i);
-            method_handler(this->method,req);
+            method_handler(this->method,req+i);
        // }
     //}
     return(0);
