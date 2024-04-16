@@ -8,6 +8,10 @@ Request::Request(){
     this->body = "";
     this->status = 200;
     this->header_status = false;
+    this->bodylength = 0;
+    this->content_length = 0;
+    this->bytes_read = 0;
+    this->file_status = false;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -123,33 +127,33 @@ int Request::parseRequest(char *req,int bytesRead)
 {
     int i = 0;
     std::string reqstr;
-    reqstr.append(req, bytesRead);
-    if(reqstr.find("\r\n\r\n") == std::string::npos)
+    bytes_read = bytesRead;
+    if(header_status == false)
     {
-        return (1);
-    }
-    while(header_status == false)
+        //std::cout<<"bytesRead===>"<<bytesRead<<std::endl;
+        reqstr.append(req, bytesRead);
+        if(reqstr.find("\r\n\r\n") == std::string::npos)
+        {
+            return (1);
+        }
+        //std::cout<<"----------------------"<<std::endl;
         i = parseheaders(reqstr);
-   // i = reqstr.length() - i;
-    std::cout<<"i=====>"<<i<<std::endl;
-    std::cout<<"--->>>"<<headers["content-length"]<<std::endl;
-    std::cout<<"==/>"<<bytesRead<<std::endl;
-    // if(i < reqstr.length())
+    std::string value = headers["Content-Length"];
+    content_length = std::atoi(value.c_str());
+    }
+    // if(bodylength == 0)
     // {
-        // if(headers["Transfer-Encoding"]=="chunked")
-        // {    
-        //     chunked_request_handler(req);
-        // }
-        // else
-        //{
-            //this->body = req.substr(i, req.length()-i);
-            method_handler(this->method,req+i);
-       // }
-    //}
+    //     bodylength = std::atoi(value.c_str())  - i;
+    //     std::cout<<"bodylength===>"<<bodylength<<std::endl;
+    // }
+    
+    method_handler(this->method,req+i, i);
+    i = 0;
+    //std::cout<<"----------------------"<<std::endl;
     return(0);
 }
 
-void Request::method_handler(std::string method,char *body)
+void Request::method_handler(std::string method,char *body, int i)
 {
     if(method == "GET")
     {
@@ -161,7 +165,7 @@ void Request::method_handler(std::string method,char *body)
     }
     else if(method == "POST")
     {
-        post_handler(body);
+        post_handler(body, i);
     }
     else
     {
@@ -194,19 +198,15 @@ std::string Request::content_type_handler()
     }
     return (0);
 }
-
-void Request::post_handler(char *body)
+void Request::post_handler(char *body, int i)
 {
     std::ofstream o;
-    if(strlen(body) == 0)
-        return;
-    // std::string value = headers["Content-Length"];
-    // if(body.length()==std::atoi(value.c_str()))
-    // {
+    long l = std::min (content_length, (long)bytes_read - i);
     std::string filename = "post" + content_type_handler();
-	o.open(filename.c_str());
-    o << body;
+	o.open(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+    o.write(body, l);
     o.close();
+    content_length -= l;
 }
 int hexatoint(string hex)
 {
@@ -224,31 +224,31 @@ int hexatoint(string hex)
 
 }
 
-// void Request::chunked_request_handler(std::string bd)
-// {
-//     std::string chunk;
-//     int i = 0;
-//     int chunksize=0 ;
-//     while(i<bd.length())
-//     {
-//         int pip = bd.find("\r\n", i);
-//         if (pip == std::string::npos) {
-//             std::cerr << "Error" << std::endl;
-//             return;
-//         }
-//         chunksize = hexatoint(bd.substr(i, pip-i));
-//         if(chunksize == 0)
-//             break;
-//         i = pip+2;
-//         if (i + chunksize > bd.length()) {
-//             std::cerr << "Error: Incomplete data" << std::endl;
-//             return;
-//         }
-//         chunk.append(bd.substr(i, chunksize));
-//         i += chunksize+2;
-//     }
-//     post_handler(chunk);
-// }
+void Request::chunked_request_handler(char *bd)
+{
+    int i = 0;
+    int chunksize=0 ;
+
+    while(i<content_length)
+    {
+        int pip = bd.find("\r\n", i);
+        if (pip == std::string::npos) {
+            std::cerr << "Error" << std::endl;
+            return;
+        }
+        chunksize = hexatoint(bd.substr(i, pip-i));
+        if(chunksize == 0)
+            break;
+        i = pip+2;
+        if (i + chunksize > bd.length()) {
+            std::cerr << "Error: Incomplete data" << std::endl;
+            return;
+        }
+        chunk.append(bd.substr(i, chunksize));
+        i += chunksize+2;
+    }
+    post_handler(chunk);
+}
 
 void Request::request_status_code()
 { 

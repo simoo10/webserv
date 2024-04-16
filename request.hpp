@@ -9,6 +9,7 @@
 #include <sstream>
 #include<cstring>
 #include"message.hpp"
+#include <algorithm>
 class Request{
     private:
         std::string method;
@@ -19,7 +20,11 @@ class Request{
         std::string body;
         int status;
         bool header_status;
+        int bodylength;
+        int bytes_read;
+        bool file_status;
     public:
+        long  content_length;
         Client *current;
         Request();
         Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body);
@@ -33,8 +38,8 @@ class Request{
         void takeRequest(std::string filename);
         int parseheaders(std::string headers);
         int parseRequest(char *req,int bytesRead);
-        void method_handler(std::string method,char *body);
-        void post_handler(char *body);
+        void method_handler(std::string method,char *body, int i);
+        void post_handler(char *body, int i);
         std::string content_type_handler();
         void chunked_request_handler(char *bd);
         void request_status_code();
