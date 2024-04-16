@@ -110,14 +110,19 @@ int main() {
                             current->getBuffer()[bytesRead] = '\0';
                             current->setBytesRead(bytesRead);
                            // std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
-                            reqstr.append(current->getBuffer(), bytesRead);
-                            if(reqstr.find("\r\n\r\n") == std::string::npos)
+                            // reqstr.append(current->getBuffer(), bytesRead);
+                            // if(reqstr.find("\r\n\r\n") == std::string::npos)
+                            // {
+                            //     //std::cout<<"===+++++++++++++=================="<<std::endl;
+                            //     current = current->getNext();
+                            //     continue;
+                            // }
+                            if(req.parseRequest(current->getBuffer(),bytesRead) == 1)
                             {
-                                //std::cout<<"===+++++++++++++=================="<<std::endl;
                                 current = current->getNext();
                                 continue;
                             }
-                            req.parseRequest(reqstr);
+                            //req.parseRequest(reqstr,bytesRead);
                         }
                         break;
                     }

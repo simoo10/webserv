@@ -18,6 +18,7 @@ class Request{
         std::map<std::string, std::string> headers;
         std::string body;
         int status;
+        bool header_status;
     public:
         Client *current;
         Request();
@@ -30,11 +31,12 @@ class Request{
         ~Request();
         int recieveRequest(int clientSocket);
         void takeRequest(std::string filename);
-        void parseRequest( std::string request);
-        void method_handler(std::string method);
-        void post_handler(std::string body);
+        int parseheaders(std::string headers);
+        int parseRequest(char *req,int bytesRead);
+        void method_handler(std::string method,char *body);
+        void post_handler(char *body);
         std::string content_type_handler();
-        void chunked_request_handler(std::string bd);
+        void chunked_request_handler(char *bd);
         void request_status_code();
 };
 

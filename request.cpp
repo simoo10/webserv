@@ -7,6 +7,7 @@ Request::Request(){
     this->headers = std::map<std::string, std::string>();
     this->body = "";
     this->status = 200;
+    this->header_status = false;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -76,7 +77,7 @@ Request::~Request(){
 //     return(0);
 // }
 
-void Request::parseRequest(std::string req)
+int Request::parseheaders(std::string req)
 {
     int i = 0;
     int pip = 0;
@@ -111,23 +112,44 @@ void Request::parseRequest(std::string req)
         std::string value = req.substr(k+2, l-k-2);
         this->headers[key] = value;
         i = l+2;
+        if(req[i] == '\r' && req[i+1] == '\n')
+            header_status = true;
     }
     i += 2;
-    if(i < req.length())
-    {
-        if(headers["Transfer-Encoding"]=="chunked")
-        {    
-            chunked_request_handler(req.substr(i, req.length()-i));
-        }
-        else
-        {
-            this->body = req.substr(i, req.length()-i);
-            method_handler(this->method);
-        }
-    }
+    return(i);
 }
 
-void Request::method_handler(std::string method)
+int Request::parseRequest(char *req,int bytesRead)
+{
+    int i = 0;
+    std::string reqstr;
+    reqstr.append(req, bytesRead);
+    if(reqstr.find("\r\n\r\n") == std::string::npos)
+    {
+        return (1);
+    }
+    while(header_status == false)
+        i = parseheaders(reqstr);
+   // i = reqstr.length() - i;
+    std::cout<<"i=====>"<<i<<std::endl;
+    std::cout<<"--->>>"<<headers["content-length"]<<std::endl;
+    std::cout<<"==/>"<<bytesRead<<std::endl;
+    // if(i < reqstr.length())
+    // {
+        // if(headers["Transfer-Encoding"]=="chunked")
+        // {    
+        //     chunked_request_handler(req);
+        // }
+        // else
+        //{
+            //this->body = req.substr(i, req.length()-i);
+            method_handler(this->method,req);
+       // }
+    //}
+    return(0);
+}
+
+void Request::method_handler(std::string method,char *body)
 {
     if(method == "GET")
     {
@@ -139,7 +161,7 @@ void Request::method_handler(std::string method)
     }
     else if(method == "POST")
     {
-        post_handler(this->body);
+        post_handler(body);
     }
     else
     {
@@ -173,19 +195,18 @@ std::string Request::content_type_handler()
     return (0);
 }
 
-void Request::post_handler(std::string body)
+void Request::post_handler(char *body)
 {
     std::ofstream o;
-    if(body.empty())
+    if(strlen(body) == 0)
         return;
-    std::string value = headers["Content-Length"];
-    if(body.length()==std::atoi(value.c_str()))
-    {
+    // std::string value = headers["Content-Length"];
+    // if(body.length()==std::atoi(value.c_str()))
+    // {
     std::string filename = "post" + content_type_handler();
 	o.open(filename.c_str());
     o << body;
     o.close();
-    }
 }
 int hexatoint(string hex)
 {
@@ -203,31 +224,31 @@ int hexatoint(string hex)
 
 }
 
-void Request::chunked_request_handler(std::string bd)
-{
-    std::string chunk;
-    int i = 0;
-    int chunksize=0 ;
-    while(i<bd.length())
-    {
-        int pip = bd.find("\r\n", i);
-        if (pip == std::string::npos) {
-            std::cerr << "Error" << std::endl;
-            return;
-        }
-        chunksize = hexatoint(bd.substr(i, pip-i));
-        if(chunksize == 0)
-            break;
-        i = pip+2;
-        if (i + chunksize > bd.length()) {
-            std::cerr << "Error: Incomplete data" << std::endl;
-            return;
-        }
-        chunk.append(bd.substr(i, chunksize));
-        i += chunksize+2;
-    }
-    post_handler(chunk);
-}
+// void Request::chunked_request_handler(std::string bd)
+// {
+//     std::string chunk;
+//     int i = 0;
+//     int chunksize=0 ;
+//     while(i<bd.length())
+//     {
+//         int pip = bd.find("\r\n", i);
+//         if (pip == std::string::npos) {
+//             std::cerr << "Error" << std::endl;
+//             return;
+//         }
+//         chunksize = hexatoint(bd.substr(i, pip-i));
+//         if(chunksize == 0)
+//             break;
+//         i = pip+2;
+//         if (i + chunksize > bd.length()) {
+//             std::cerr << "Error: Incomplete data" << std::endl;
+//             return;
+//         }
+//         chunk.append(bd.substr(i, chunksize));
+//         i += chunksize+2;
+//     }
+//     post_handler(chunk);
+// }
 
 void Request::request_status_code()
 { 
@@ -264,4 +285,5 @@ void Request::request_status_code()
             status = 400;
         
     }
+
 }
