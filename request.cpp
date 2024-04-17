@@ -12,6 +12,7 @@ Request::Request(){
     this->content_length = 0;
     this->bytes_read = 0;
     this->file_status = false;
+    this->chunked_status = false;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -146,8 +147,12 @@ int Request::parseRequest(char *req,int bytesRead)
     //     bodylength = std::atoi(value.c_str())  - i;
     //     std::cout<<"bodylength===>"<<bodylength<<std::endl;
     // }
-    
-    method_handler(this->method,req+i, i);
+    if(headers["Transfer-Encoding"]=="chunked")
+    {
+        chunked_request_handler(req+i);
+    }
+    else
+        method_handler(this->method,req+i, i);
     i = 0;
     //std::cout<<"----------------------"<<std::endl;
     return(0);
@@ -224,30 +229,93 @@ int hexatoint(string hex)
 
 }
 
-void Request::chunked_request_handler(char *bd)
-{
-    int i = 0;
-    int chunksize=0 ;
+// void Request::chunked_request_handler(char *bd)
+// {
+//     int i = 0;
+//     int chunksize=0 ;
 
-    while(i<content_length)
+//     while(i<content_length)
+//     {
+//         int pip = bd.find("\r\n", i);
+//         if (pip == std::string::npos) {
+//             std::cerr << "Error" << std::endl;
+//             return;
+//         }
+//         chunksize = hexatoint(bd.substr(i, pip-i));
+//         if(chunksize == 0)
+//             break;
+//         i = pip+2;
+//         if (i + chunksize > bd.length()) {
+//             std::cerr << "Error: Incomplete data" << std::endl;
+//             return;
+//         }
+//         chunk.append(bd.substr(i, chunksize));
+//         i += chunksize+2;
+//     }
+//     post_handler(chunk);
+// }
+
+void Request::chunked_request_handler(char *body)
+{
+    int  i = 0;
+    int j = 0;
+    long chunksize = 0;
+    std::ofstream o;
+    long readed = 0;
+    long l = 0;
+    std::string filename = "post" + content_type_handler();
+    std::string hex = "";
+    //std::cout<<body<<std::endl;
+   // exit(0);
+   if(flag == false)
+   {
+    while(body[j] != '\r' && body[j+1] != '\n')
+            j++;
+    for(int k = i; k < j; k++)
+        hex += body[k];
+    chunksize = hexatoint(hex);
+    if(chunksize == 0)
+        return;
+    i = j+2;
+    flag = true;
+   }
+    while(chunksize != 0)
     {
-        int pip = bd.find("\r\n", i);
-        if (pip == std::string::npos) {
-            std::cerr << "Error" << std::endl;
-            return;
-        }
-        chunksize = hexatoint(bd.substr(i, pip-i));
+        l = std::min (chunksize, (long)bytes_read);
+        o.open(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+        o.write(body+i, l);
+        o.close();
+        readed += bytes_read;
+        i = l;
+        chunksize -= l;
+        std::cout<<"chunksize===>"<<chunksize<<std::endl;
+        std::cout<<"readed===>"<<readed<<std::endl;
+        //sleep(5);
         if(chunksize == 0)
-            break;
-        i = pip+2;
-        if (i + chunksize > bd.length()) {
-            std::cerr << "Error: Incomplete data" << std::endl;
-            return;
+        {
+            // std::cout<<"readed===>"<<readed<<std::endl;
+            // exit(0);
+            if(readed > 11105000)
+            {
+               // sleep(5);
+                std::cout<<body<<std::endl;
+                exit(0);
+            }
+            std::cout<<"i===>"<<i<<std::endl;
+            // std::cout<<body<<std::endl;
+            // exit(0);
+            i += 2;
+            flag = false;
+            while(body[i] != '\r' && body[i+1] != '\n')
+                i++;
+            for(int k = i; k < j; k++)
+                hex += body[k];
+            chunksize = hexatoint(hex);
+            if(chunksize == 0)
+                return;
+            i = j+2;
         }
-        chunk.append(bd.substr(i, chunksize));
-        i += chunksize+2;
     }
-    post_handler(chunk);
 }
 
 void Request::request_status_code()

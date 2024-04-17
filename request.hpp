@@ -23,6 +23,8 @@ class Request{
         int bodylength;
         int bytes_read;
         bool file_status;
+        bool chunked_status;
+        bool flag;
     public:
         long  content_length;
         Client *current;
@@ -41,7 +43,8 @@ class Request{
         void method_handler(std::string method,char *body, int i);
         void post_handler(char *body, int i);
         std::string content_type_handler();
-        void chunked_request_handler(char *bd);
+        void chunked_request_handler(char *body);
+        void post_handler1(std::string body);
         void request_status_code();
 };
 
