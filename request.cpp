@@ -13,6 +13,9 @@ Request::Request(){
     this->bytes_read = 0;
     this->file_status = false;
     this->chunked_status = false;
+    chunksize = 0;
+    flag = false;
+    iposition = 0;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -21,6 +24,21 @@ Request::Request(std::string method, std::string path, std::string version, std:
     this->version = version;
     this->headers = headers;
     this->body = body;
+    this->method = "";
+    this->path = "";
+    this->version = "";
+    this->headers = std::map<std::string, std::string>();
+    this->body = "";
+    this->status = 200;
+    this->header_status = false;
+    this->bodylength = 0;
+    this->content_length = 0;
+    this->bytes_read = 0;
+    this->file_status = false;
+    this->chunked_status = false;
+    chunksize = 0;
+    flag = false;
+    iposition = 0;
 }
 
 std::string Request::getMethod(){
@@ -149,7 +167,8 @@ int Request::parseRequest(char *req,int bytesRead)
     // }
     if(headers["Transfer-Encoding"]=="chunked")
     {
-        chunked_request_handler(req+i);
+        // cout << i << endl;
+        chunked_request_handler(req,i);
     }
     else
         method_handler(this->method,req+i, i);
@@ -255,65 +274,75 @@ int hexatoint(string hex)
 //     post_handler(chunk);
 // }
 
-void Request::chunked_request_handler(char *body)
+void Request::chunked_request_handler(char *body,int i)
 {
-    int  i = 0;
+    //int  i = 0;
     int j = 0;
-    long chunksize = 0;
+    //long chunksize = 0;
     std::ofstream o;
     long readed = 0;
     long l = 0;
     std::string filename = "post" + content_type_handler();
-    std::string hex = "";
+    std::string hex;
     //std::cout<<body<<std::endl;
    // exit(0);
-   if(flag == false)
-   {
-    while(body[j] != '\r' && body[j+1] != '\n')
-            j++;
-    for(int k = i; k < j; k++)
-        hex += body[k];
-    chunksize = hexatoint(hex);
-    if(chunksize == 0)
-        return;
-    i = j+2;
-    flag = true;
-   }
-    while(chunksize != 0)
+  // cout << "herer" << endl;
+  //cout << "i: " << i << " bytes_read: " << bytes_read << endl;
+  //if ( i!= 0) getchar();
+    while(i < bytes_read)
     {
-        l = std::min (chunksize, (long)bytes_read);
+        if(flag == false)
+        {
+            // std::cout<<"here"<<std::endl;
+            // exit(0);
+            if (body[i] == '\r' && body[i+1] == '\n')
+            {
+                i += 2;
+            }
+            j = i;
+            hex.clear();
+            while(body[j] != '\r' && body[j+1] != '\n')
+                    j++;
+            for(int k = i; k < j; k++) {
+                hex += body[k];
+           //     cout << body[k] << " ";
+            }
+            //cout << endl;
+            chunksize = hexatoint(hex);
+            //cout << "hex: " << hex << " chunksize: " << chunksize << endl;
+            if(chunksize == 0)
+                { header_status=false ; flag = true; return; }
+            i = j+2;
+            flag = true;
+        }
+        l = std::min (chunksize, (long)(bytes_read - i));
+        //cout << "chunksize: " << chunksize << " bytes_read: " << bytes_read << " i: " << i << " l: " << l << endl;
         o.open(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
-        o.write(body+i, l);
+        o.write(body + i, l);
         o.close();
-        readed += bytes_read;
-        i = l;
         chunksize -= l;
-        std::cout<<"chunksize===>"<<chunksize<<std::endl;
-        std::cout<<"readed===>"<<readed<<std::endl;
-        //sleep(5);
+        i += l;
+      // std::cout<<"chunksize===>"<<chunksize<< " i: " << i  << std::endl;
         if(chunksize == 0)
         {
-            // std::cout<<"readed===>"<<readed<<std::endl;
-            // exit(0);
-            if(readed > 11105000)
-            {
-               // sleep(5);
-                std::cout<<body<<std::endl;
-                exit(0);
-            }
-            std::cout<<"i===>"<<i<<std::endl;
-            // std::cout<<body<<std::endl;
-            // exit(0);
-            i += 2;
+            //exit(0);
+            // hex.clear();
+            // readed++;
+            // i += 2;
+            // j = i;
+           // hex = "";
+        //     while(body[j] != '\r' && body[j+1] != '\n')
+        //         j++;
+        //     for(int k = i; k < j; k++)
+        //         hex += body[k];
+        //     //std::cout<<body<<std::endl;
+        //     cout << "hex: " << hex << endl;
+        //    // sleep(2);
+        //     chunksize = hexatoint(hex);
+        //     if(chunksize == 0)
+        //         return;
+        //     i = j+2;
             flag = false;
-            while(body[i] != '\r' && body[i+1] != '\n')
-                i++;
-            for(int k = i; k < j; k++)
-                hex += body[k];
-            chunksize = hexatoint(hex);
-            if(chunksize == 0)
-                return;
-            i = j+2;
         }
     }
 }

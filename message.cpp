@@ -18,6 +18,10 @@ int main() {
     serverAddress.sin_addr.s_addr = INADDR_ANY;
     serverAddress.sin_port = htons(8080);
 
+    int on = 1;
+        int rc = setsockopt(serverSocket, SOL_SOCKET,  SO_REUSEADDR,
+                   (char *)&on, sizeof(on));
+
     if (bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
         perror("Error binding socket");
         close(serverSocket);
@@ -95,6 +99,7 @@ int main() {
                 while (current != nullptr) {
                     if (current->getSocketDescriptor() == fd) {
                       // vector<char> buffer(BUFFER_SIZE);
+                      //cout << "im here" << endl;
                         ssize_t bytesRead = recv(fd, current->getBuffer(), BUFFER_SIZE, 0);
                         //std::cout<<current->getBuffer()<<std::endl;
                         if (bytesRead <= 0) {
