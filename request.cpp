@@ -291,7 +291,7 @@ void Request::chunked_request_handler(char *body,int i)
   //if ( i!= 0) getchar();
     while(i < bytes_read)
     {
-        if(flag == false)
+        if(flag == false && i < bytes_read)
         {
             // std::cout<<"here"<<std::endl;
             // exit(0);
@@ -302,7 +302,11 @@ void Request::chunked_request_handler(char *body,int i)
             j = i;
             hex.clear();
             while(body[j] != '\r' && body[j+1] != '\n')
+            {
+                std::cout<<body[j]<<"-----"<<j<<std::endl;
+                //sleep(1);
                     j++;
+            }
             for(int k = i; k < j; k++) {
                 hex += body[k];
            //     cout << body[k] << " ";
@@ -325,10 +329,11 @@ void Request::chunked_request_handler(char *body,int i)
       // std::cout<<"chunksize===>"<<chunksize<< " i: " << i  << std::endl;
         if(chunksize == 0)
         {
+            j =0;
             //exit(0);
             // hex.clear();
             // readed++;
-            // i += 2;
+            //i += 2;
             // j = i;
            // hex = "";
         //     while(body[j] != '\r' && body[j+1] != '\n')

@@ -14,7 +14,7 @@ class Request{
     private:
         std::string method;
         std::string path;
-        char buffer[BUFFER_SIZE + 1];
+        char buffer[BUFFER_SIZE];
         std::string version;
         std::map<std::string, std::string> headers;
         std::string body;
@@ -26,6 +26,7 @@ class Request{
         bool chunked_status;
         bool flag;
         long chunksize;
+        bool check;
         int iposition;
     public:
         long  content_length;
