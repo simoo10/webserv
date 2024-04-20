@@ -30,7 +30,7 @@ class Client {
     int clientSocket;
     sockaddr_in clientAddress;
     socklen_t clientAddressLength;
-    char buffer[BUFFER_SIZE + 1];
+    char buffer[BUFFER_SIZE];
     ssize_t bytesRead;
     char body[BUFFER_SIZE ];
     char *FullRequest;

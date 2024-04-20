@@ -10,6 +10,8 @@
 #include<cstring>
 #include"message.hpp"
 #include <algorithm>
+
+using namespace std;
 class Request{
     private:
         std::string method;
@@ -28,6 +30,7 @@ class Request{
         long chunksize;
         bool check;
         int iposition;
+        bool hexa_status;
     public:
         long  content_length;
         Client *current;
