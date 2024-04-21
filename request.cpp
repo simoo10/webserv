@@ -6,7 +6,7 @@ Request::Request(){
     this->version = "";
     this->headers = std::map<std::string, std::string>();
     this->body = "";
-    this->status = 200;
+    this->status = 201;
     this->header_status = false;
     this->bodylength = 0;
     this->content_length = 0;
@@ -344,7 +344,11 @@ void Request::chunked_request_handler(char *body,int i)
         //cout<< "chunksize: " << chunksize << " i: " << i << " bytes_read: " << bytes_read << endl;
         l = std::min (chunksize, (long)(bytes_read - i));
         o.open(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+        if(!o.is_open())
+           status = 500;
         o.write(body + i, l);
+        if(!o)
+            status = 500;
         o.flush();
         o.close();
         chunksize -= l;
@@ -391,7 +395,8 @@ void Request::request_status_code()
         }
         else if(headers.find("Content-Type") == headers.end())
             status = 400;
-        
+        else if(headers["content-type"] == "boundary")
+            status = 400;
     }
 
 }
