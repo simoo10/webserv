@@ -10,3 +10,4 @@ class Response {
         Response();
         void sendResponse(int clientsocket);
 };
+#endif

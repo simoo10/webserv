@@ -151,7 +151,6 @@ int Request::parseRequest(char *req,int bytesRead)
     bytes_read = bytesRead;
     if(header_status == false)
     {
-        //std::cout<<"bytesRead===>"<<bytesRead<<std::endl;
         reqstr.append(req, bytesRead);
         if(reqstr.find("\r\n\r\n") == std::string::npos)
         {
@@ -162,11 +161,6 @@ int Request::parseRequest(char *req,int bytesRead)
     std::string value = headers["Content-Length"];
     content_length = std::atoi(value.c_str());
     }
-    // if(bodylength == 0)
-    // {
-    //     bodylength = std::atoi(value.c_str())  - i;
-    //     std::cout<<"bodylength===>"<<bodylength<<std::endl;
-    // }
     if(headers["Transfer-Encoding"]=="chunked")
     {
         // cout << i << endl;
