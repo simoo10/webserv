@@ -11,5 +11,3 @@ Response::Response() {
     code[414] = "URI Too Long";
     code[411] = "Length Required";
 }
-
-

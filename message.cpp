@@ -79,6 +79,8 @@ int main(int ac,char **av) {
             if (fd == serverSocket) {
                 // New connection
                 int clientSocket = accept(serverSocket, nullptr, nullptr);
+                req.clientSocket = clientSocket;
+                std::cout<<"+++++++++++"<<clientSocket<<std::endl;
                 if (clientSocket == -1) {
                     perror("Error accepting connection");
                 } else {
@@ -89,7 +91,6 @@ int main(int ac,char **av) {
                     socklen_t clientAddressLen = sizeof(clientAddress);
                     getpeername(clientSocket, (struct sockaddr*)&clientAddress, &clientAddressLen);
                     Client* newClient = new Client(clientSocket, clientAddress, clientAddressLen);
-
                     // Add the new client to the linked list
                     newClient->setNext(head);
                     head = newClient;
@@ -131,7 +132,8 @@ int main(int ac,char **av) {
                             //     current = current->getNext();
                             //     continue;
                             // }
-                            if(req.parseRequest(current->getBuffer(),bytesRead) == 1)
+                            
+                            if(req.parseRequest(current->getBuffer(),bytesRead,config) == 1)
                             {
                                 current = current->getNext();
                                 continue;
@@ -150,6 +152,7 @@ int main(int ac,char **av) {
     // Close all client sockets and delete client objects
     Client* current = head;
     while (current != nullptr) {
+        
         close(current->getSocketDescriptor());
         Client* next = current->getNext();
         delete current;

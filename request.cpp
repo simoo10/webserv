@@ -1,5 +1,6 @@
 #include"request.hpp"
 #include<unistd.h>
+#include"config.hpp"
 Request::Request(){
     this->method = "";
     this->path = "";
@@ -102,7 +103,7 @@ Request::~Request(){
 //     return(0);
 // }
 
-int Request::parseheaders(std::string req)
+int Request::parseheaders(std::string req,GlobalConfig &config)
 {
     int i = 0;
     int pip = 0;
@@ -116,8 +117,8 @@ int Request::parseheaders(std::string req)
             break;
         }
         i++;
-    }  
-    int j = i+1; 
+    }
+    int j = i+1;
     while(reqline[j])
     {
         if(reqline[j] == ' ')
@@ -144,7 +145,7 @@ int Request::parseheaders(std::string req)
     return(i);
 }
 
-int Request::parseRequest(char *req,int bytesRead)
+int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
 {
     int i = 0;
     std::string reqstr;
@@ -157,9 +158,17 @@ int Request::parseRequest(char *req,int bytesRead)
             return (1);
         }
         //std::cout<<"----------------------"<<std::endl;
-        i = parseheaders(reqstr);
+        i = parseheaders(reqstr,config);
     std::string value = headers["Content-Length"];
     content_length = std::atoi(value.c_str());
+    }
+    if(headers["Content-Length"] == "0")
+    {
+        status = 400;
+        std::cout<<"----------------------"<<std::endl;
+        std::string response = std::to_string(status) + " " + "Bad Request" + "\r\n";
+        send(clientSocket, response.c_str(), response.length(), 0);
+        return(0);
     }
     if(headers["Transfer-Encoding"]=="chunked")
     {

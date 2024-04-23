@@ -10,8 +10,10 @@
 #include<cstring>
 #include"message.hpp"
 #include <algorithm>
-
+#include"config.hpp"
 using namespace std;
+
+class GlobalConfig;
 class Request{
     private:
         std::string method;
@@ -20,7 +22,7 @@ class Request{
         std::string version;
         std::map<std::string, std::string> headers;
         std::string body;
-        int status;
+        
         bool header_status;
         int bodylength;
         int bytes_read;
@@ -32,8 +34,12 @@ class Request{
         int iposition;
         bool hexa_status;
     public:
+    int status;
+        int clientSocket;
+        string filename;
         long  content_length;
         Client *current;
+        //GlobalConfig config;
         Request();
         Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body);
         std::string getMethod();
@@ -44,8 +50,8 @@ class Request{
         ~Request();
         int recieveRequest(int clientSocket);
         void takeRequest(std::string filename);
-        int parseheaders(std::string headers);
-        int parseRequest(char *req,int bytesRead);
+        int parseheaders(std::string headers,GlobalConfig &config);
+        int parseRequest(char *req,int bytesRead,GlobalConfig &config);
         void method_handler(std::string method,char *body, int i);
         void post_handler(char *body, int i);
         std::string content_type_handler();
