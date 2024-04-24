@@ -18,6 +18,9 @@ Request::Request(){
     flag = false;
     iposition = 0;
     hexa_status = false;
+    request_status = false;
+    check = false;
+    clientSocket = 0;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -42,6 +45,9 @@ Request::Request(std::string method, std::string path, std::string version, std:
     flag = false;
     iposition = 0;
     hexa_status = false;
+    request_status = false;
+    check = false;
+    clientSocket = 0;
 }
 
 std::string Request::getMethod(){
@@ -162,6 +168,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     std::string value = headers["Content-Length"];
     content_length = std::atoi(value.c_str());
     }
+    std::cout<<headers["Host"]<<std::endl;
     if(headers["Content-Length"] == "0")
     {
         status = 400;
@@ -236,6 +243,13 @@ void Request::post_handler(char *body, int i)
     o.write(body, l);
     o.close();
     content_length -= l;
+    if(content_length == 0)
+    {
+        status = 201;
+        request_status = true;
+        header_status=false ;
+        return;
+    }
 }
 int hexatoint(string hex)
 {
@@ -318,7 +332,12 @@ void Request::chunked_request_handler(char *body,int i)
                // cout << "chunksize: " << chunksize << endl;
                 hex.clear();
                 if(chunksize == 0)
-                    { header_status=false ; flag = true; return; }
+                    { 
+                        status = 201;
+                        request_status = true;
+                        header_status=false ; 
+                        flag = true; 
+                        return; }
                 check = true;
                 i = j;
                 if(body[i] == '\r')

@@ -39,6 +39,7 @@ class Request{
         string filename;
         long  content_length;
         Client *current;
+        bool request_status;
         //GlobalConfig config;
         Request();
         Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body);

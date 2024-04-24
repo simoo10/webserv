@@ -11,3 +11,9 @@ Response::Response() {
     code[414] = "URI Too Long";
     code[411] = "Length Required";
 }
+
+void Response::SendPostResponse(Request &req, int clientSocket) {
+    std::string response = req.getVersion() + " " + std::to_string(req.status) + " " + code[req.status] + "\r\n";
+    std::cout<<response<<std::endl;
+    send(clientSocket, response.c_str(), response.size(), 0);
+}

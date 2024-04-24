@@ -1,8 +1,7 @@
 #include "message.hpp"
 #include"request.hpp"
 #include"config.hpp"
-
-
+#include"response.hpp"
 
 int main(int ac,char **av) {
     int j = 0;
@@ -13,6 +12,7 @@ int main(int ac,char **av) {
     int serverSocket,epollFd;
     epoll_event event;
     Request req;
+    Response res;
     //char buff[BUFFER_SIZE];
     //epoll_event events[MAX_CLIENTS];
     signal(SIGPIPE, SIG_IGN);
@@ -138,7 +138,13 @@ int main(int ac,char **av) {
                                 current = current->getNext();
                                 continue;
                             }
-                            //req.parseRequest(reqstr,bytesRead);
+                            if(req.request_status == true)
+                            {
+                                res.SendPostResponse(req,fd);
+                                req.request_status = false;
+                                current = current->getNext();
+                                continue;
+                            }
                         }
                         break;
                     }
