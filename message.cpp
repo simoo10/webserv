@@ -12,7 +12,7 @@ int main(int ac,char **av) {
     int serverSocket,epollFd;
     epoll_event event;
     Request req;
-    Response res;
+    Response res(&req);
     //char buff[BUFFER_SIZE];
     //epoll_event events[MAX_CLIENTS];
     signal(SIGPIPE, SIG_IGN);
@@ -140,7 +140,7 @@ int main(int ac,char **av) {
                             }
                             if(req.request_status == true)
                             {
-                                res.SendPostResponse(req,fd);
+                                res.SendPostResponse(fd);
                                 req.request_status = false;
                                 current = current->getNext();
                                 continue;

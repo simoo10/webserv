@@ -168,7 +168,15 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     std::string value = headers["Content-Length"];
     content_length = std::atoi(value.c_str());
     }
-    std::cout<<headers["Host"]<<std::endl;
+
+    
+
+    if(method == "GET")
+    {
+        CGI cgi;
+        cgi.execute_cgi(*this);
+    }
+    
     if(headers["Content-Length"] == "0")
     {
         status = 400;

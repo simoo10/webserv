@@ -1,6 +1,7 @@
 #include"response.hpp"
 
-Response::Response() {
+Response::Response(Request *req) {
+    this->req = req;
     code[200] = "OK";
     code[404] = "Not Found";
     code[500] = "Internal Server Error";
@@ -12,8 +13,13 @@ Response::Response() {
     code[411] = "Length Required";
 }
 
-void Response::SendPostResponse(Request &req, int clientSocket) {
-    std::string response = req.getVersion() + " " + std::to_string(req.status) + " " + code[req.status] + "\r\n";
+void Response::SendPostResponse(int clientSocket) {
+    std::map<std::string, std::string>::iterator it;
+    for(it = req->getHeaders().begin(); it != req->getHeaders().end(); it++) {
+        std::cout<<it->first<<" : "<<it->second<<std::endl;
+    }
+
+    std::string response = req->getVersion() + " " + std::to_string(req->status) + " " + code[req->status] + "\r\n";
     std::cout<<response<<std::endl;
     send(clientSocket, response.c_str(), response.size(), 0);
 }

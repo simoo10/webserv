@@ -11,16 +11,17 @@
 #include"message.hpp"
 #include <algorithm>
 #include"config.hpp"
+#include"cgi.hpp"
 using namespace std;
 
 class GlobalConfig;
+class CGI;
 class Request{
     private:
         std::string method;
         std::string path;
         char buffer[BUFFER_SIZE];
         std::string version;
-        std::map<std::string, std::string> headers;
         std::string body;
         
         bool header_status;
@@ -34,6 +35,7 @@ class Request{
         int iposition;
         bool hexa_status;
     public:
+        std::map<std::string, std::string> headers;
     int status;
         int clientSocket;
         string filename;

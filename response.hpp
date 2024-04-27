@@ -7,7 +7,8 @@ class Response {
     private:
         std::map<int, std::string> code;
     public:
-        Response();
-        void SendPostResponse(Request &req, int clientSocket);
+        Request *req;
+        Response(Request *req);
+        void SendPostResponse(int clientSocket);
 };
 #endif
