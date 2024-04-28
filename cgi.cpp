@@ -32,30 +32,44 @@ CGI::~CGI() {
 }
 
 
+
 void CGI:: envirement_init(Request &req) {
     envirement = new char*[4];
-    size_t i = 0;
-    std::map<std::string, std::string>::const_iterator it;
-    std:: string methode = "REQUEST_METHOD="+req.getMethod();
-    std::string root = "home/met-tahe/Desktop/webserv";
-    std::string script_filename ="SCRIPT_FILENAME="+req.getPath();
-    std::string REDIRECT_STATUS = "REDIRECT_STATUS=200";
-    executable = script_filename.substr(script_filename.find_last_of('.') + 1);
-    envirement[i] = strdup(script_filename.c_str());
-    i++;
-    envirement[i] = strdup(methode.c_str());
-    i++;
-    envirement[i] = strdup(REDIRECT_STATUS.c_str());
-    i++;
-    for (it = req.headers.begin(); it != req.headers.end(); it++) {
-        std::string key = change_the_key(it->first);
-        std::string value = it->second;
-        std::string env = key + "=" + value;
-    std::cout<<"==========="<<std::endl;
-        envirement[i] = strdup(env.c_str());
-        i++;
+    int i = 0;
+    if(req.getMethod()=="POST")
+    {
+        std::string script_filename = "SCRIPT_FILENAME=" + req.getPath();
+        envirement[0] = strdup(script_filename.c_str());
+        envirement[1] = strdup("REQUEST_METHOD=POST");
+        std::string content_length = "CONTENT_LENGTH=" + req.headers["Content-Length"];
+        envirement[2] = strdup(content_length.c_str());
+        envirement[3] = strdup("REDIRECT_STATUS=200");
+        std::string querystring ="QUERY_STRING="+ req.querystr;
+        envirement[4] = strdup(querystring.c_str());
+        envirement[5] = NULL;
+        int pos = req.getPath().find_last_of('.');
+        if(pos != std::string::npos) {
+            executable = req.getPath().substr(pos + 1);
+        }
     }
-    envirement[i] = NULL;
+    else if(req.getMethod()=="GET")
+    {
+        std::string script_filename = "SCRIPT_FILENAME="+req.root_path+ req.getPath();
+        envirement[0] = strdup(script_filename.c_str());
+        envirement[1] = strdup("REQUEST_METHOD=GET");
+        envirement[2] = strdup("REDIRECT_STATUS=200");
+        std::string querystring ="QUERY_STRING="+ req.querystr;
+        envirement[3] = strdup(querystring.c_str());
+        envirement[4] = NULL;
+        int pos = req.getPath().find_last_of('.');
+        if(pos != std::string::npos) {
+            executable = req.getPath().substr(pos + 1);
+        }
+    }
+    else
+    {
+        req.status = 405;
+    }
 }
 
 void CGI::take_args(Request &req) {
@@ -82,32 +96,30 @@ void CGI::take_args(Request &req) {
 
 void CGI::execute_cgi(Request &req)
 {
-    int status;
+    int waitstatus;
     pid_t pid;
-    // std::map<std::string, std::string>::iterator it;
-    // for(it = req.getHeaders().begin(); it != req.getHeaders().end(); it++)
-    // {
-    //     std::cout<<it->first<<" "<<it->second<<std::endl;
-    // }
+    int fdfile = open("cgifile.cgi", O_CREAT | O_WRONLY | O_TRUNC, 0644);
     envirement_init(req);
     take_args(req);
 
-    std::cout<<"=>"<<av[0]<<std::endl;
-    std::cout<<"=>"<<av[1]<<std::endl;
-    int fd[2];
-    if (pipe(fd) == -1)
-        throw std::runtime_error("CGI: pipe failed");
-    std::cout<<"===========>>>>>"<<std::endl;
-    if ((pid = fork()) == -1)
-        throw std::runtime_error("CGI: fork failed");
-    if (pid == 0) {
-    if (execve(av[0], av, envirement) == -1)
+    if((pid = fork()) < 0)
     {
-            throw std::runtime_error("CGI: execve failed");
+        perror("fork");
+        exit(1);
     }
+    else if(pid == 0)
+    {
+        dup2(fdfile, 1);
+        close(fdfile);
+        if(execve(av[0], av, envirement) < 0)
+        {
+            perror("execve");
+            exit(1);
+        }
     }
-    else {
-        waitpid(pid, &status, 0);
+    else
+    {
+        waitpid(pid, &waitstatus, 0);
+        close(fdfile);
     }
-
 }

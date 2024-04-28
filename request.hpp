@@ -42,6 +42,8 @@ class Request{
         long  content_length;
         Client *current;
         bool request_status;
+        std::string root_path;
+        std::string querystr;
         //GlobalConfig config;
         Request();
         Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body);
@@ -61,6 +63,7 @@ class Request{
         void chunked_request_handler(char *body,int i);
         void post_handler1(std::string body);
         void request_status_code();
+        void set_querystr();
 };
 
 #endif

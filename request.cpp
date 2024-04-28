@@ -21,6 +21,8 @@ Request::Request(){
     request_status = false;
     check = false;
     clientSocket = 0;
+    root_path = "/home/met-tahe/Desktop/webserv";
+    querystr = "";
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -48,6 +50,8 @@ Request::Request(std::string method, std::string path, std::string version, std:
     request_status = false;
     check = false;
     clientSocket = 0;
+    root_path = "/home/met-tahe/Desktop/webserv";
+    querystr = "";
 }
 
 std::string Request::getMethod(){
@@ -147,8 +151,18 @@ int Request::parseheaders(std::string req,GlobalConfig &config)
         if(req[i] == '\r' && req[i+1] == '\n')
             header_status = true;
     }
+    set_querystr();
     i += 2;
     return(i);
+}
+void Request::set_querystr()
+{
+    int pos = path.find("?");
+    if(pos != std::string::npos)
+    {
+        querystr = path.substr(pos+1);
+        path = path.substr(0, pos);
+    }
 }
 
 int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
@@ -168,9 +182,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     std::string value = headers["Content-Length"];
     content_length = std::atoi(value.c_str());
     }
-
-    
-
+    std::cout<<"------------------"<<method<<"---------------"<<std::endl;
     if(method == "GET")
     {
         CGI cgi;
