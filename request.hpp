@@ -12,6 +12,8 @@
 #include <algorithm>
 #include"config.hpp"
 #include"cgi.hpp"
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
 class GlobalConfig;
@@ -23,7 +25,7 @@ class Request{
         char buffer[BUFFER_SIZE];
         std::string version;
         std::string body;
-        
+        size_t body_size;
         bool header_status;
         int bodylength;
         int bytes_read;
@@ -34,16 +36,19 @@ class Request{
         bool check;
         int iposition;
         bool hexa_status;
+        bool path_status;
     public:
         std::map<std::string, std::string> headers;
     int status;
         int clientSocket;
         string filename;
         long  content_length;
+        std::string randfilename;
         Client *current;
         bool request_status;
         std::string root_path;
         std::string querystr;
+        std::vector<std::string> possible_headers;
         //GlobalConfig config;
         Request();
         Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body);
@@ -64,6 +69,11 @@ class Request{
         void post_handler1(std::string body);
         void request_status_code();
         void set_querystr();
+        void check_headers();
+        void set_possible_headers();
+        void check_path_availability();
+        void generate_filenames();
+        void check_headers_content();
 };
 
 #endif
