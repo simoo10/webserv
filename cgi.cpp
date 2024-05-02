@@ -7,19 +7,6 @@ CGI::CGI() {
 
 }
 
-std::string change_the_key(const std::string& str) {
-    std::string upperkey = str;
-    for (size_t i = 0; i < upperkey.length(); ++i) {
-        if (upperkey[i] == '-') {
-            upperkey[i] = '_';
-            continue;
-        }
-        upperkey[i] = std::toupper(upperkey[i]);
-        
-    }
-    return(upperkey);
-}
-
 // void CGI::print_req_headers(Request &req) {
 //     std::map<std::string, std::string>::iterator it;
 //     for(it = req.headers.begin(); it != req.headers.end(); it++)

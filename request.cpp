@@ -180,7 +180,10 @@ int Request::parseheaders(std::string req,GlobalConfig &config)
         this->headers[key] = value;
         i = l+2;
         if(req[i] == '\r' && req[i+1] == '\n')
+        {
+            std::cout<<"here100"<<std::endl;
             header_status = true;
+        }
     }
     if(header_status == false)
     {
@@ -220,7 +223,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     content_length = std::atoi(value.c_str());
     bodylength = std::atoi(value.c_str());
     }
-    std::cout<<"------------------"<<method<<"---------------"<<std::endl;
+    //std::cout<<"------------------"<<method<<"---------------"<<std::endl;
     // if(method == "GET")
     // {
     //     CGI cgi;
@@ -228,26 +231,32 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     // }
     check_headers();
     request_status_code();
-    if(status != 200 || status != 201)
+    if(status != 200 && status != 201)
     {
+        std::cout<<status<<std::endl;
+        //std::cout<<"here1"<<std::endl;
         //send error response;
         return(0);
     }
-    if(headers["Content-Length"] == "0")
+    if(headers["Content-Length"] == "0" && method == "POST")
     {
         status = 400;
         std::cout<<"----------------------"<<std::endl;
-        std::string response = std::to_string(status) + " " + "Bad Request" + "\r\n";
-        send(clientSocket, response.c_str(), response.length(), 0);
+        // std::string response = std::to_string(status) + " " + "Bad Request" + "\r\n";
+        // send(clientSocket, response.c_str(), response.length(), 0);
         return(0);
     }
+    //handle body;
     if(headers["Transfer-Encoding"]=="chunked")
     {
         // cout << i << endl;
         chunked_request_handler(req,i);
     }
     else
+    {
+        std::cout<<"here2"<<std::endl;
         method_handler(this->method,req+i, i);
+    }
     i = 0;
     //std::cout<<"----------------------"<<std::endl;
     return(0);
@@ -267,10 +276,10 @@ void Request::method_handler(std::string method,char *body, int i)
     {
         post_handler(body, i);
     }
-    else
-    {
-        std::cout<<"Invalid Method"<<std::endl;
-    }
+    //else
+    // {
+    //     std::cout<<"Invalid Method"<<std::endl;
+    // }
 }
 
 std::string Request::content_type_handler()
@@ -296,14 +305,19 @@ std::string Request::content_type_handler()
         if(it->first == "Content-Type")
             return(contenttype[it->second]);
     }
+    if(it == this->headers.end())
+    {
+        status = 400;
+    }
     return (0);
 }
+
 void Request::post_handler(char *body, int i)
 {
     std::ofstream o;
-    generate_filenames();
+    //generate_filenames();
     long l = std::min (content_length, (long)bytes_read - i);
-    std::string filename = randfilename + content_type_handler();
+    std::string filename = "POSTd" + content_type_handler();
 	o.open(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
     o.write(body, l);
     o.close();
@@ -473,39 +487,66 @@ void Request::chunked_request_handler(char *body,int i)
 void Request::request_status_code()
 { 
     if(method.empty() || path.empty() || version.empty())
+    {
+        std::cout<<"here10"<<std::endl;
         status = 400;
+    }
     else if(path.length() > 2048)
+    {
+        std::cout<<"here11"<<std::endl;
         status = 414;
+    }
     //if the body size defined in the config file is less than the actual body size then 413
     else if(version != "HTTP/1.1")
+    {
+        std::cout<<"here12"<<std::endl;
         status = 505;
+    }
     else if(method != "GET" && method != "POST" && method != "DELETE")
     {
         if(method == "PUT" || method == "HEAD" || method == "OPTIONS" || method == "TRACE" || method == "CONNECT")
             status = 501;
         else
-            status = 400;
+            status = 405;//method not allowed;
     }
     else if(method == "POST" )
     {
         if(headers.find("Content-Length") == headers.end() && headers.find("Transfer-Encoding") == headers.end())
-            status = 411;
-        else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") != headers.end())
-            status = 400;
-        else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") == headers.end())
         {
-            if(headers["Content-Length"] == "0")
-                status = 400;
+            std::cout<<"here4"<<std::endl;
+            status = 411;
         }
+        // else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") != headers.end())
+        // {
+        //     std::cout<<"here5"<<std::endl;
+        //     status = 400;
+        // }
+        // else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") == headers.end())
+        // {
+        //     if(headers["Content-Length"] == "0")
+        //     {
+        //         std::cout<<"here6"<<std::endl;
+        //         status = 400;
+        //     }
+        // }
         else if(headers.find("Transfer-Encoding") != headers.end() && headers.find("Content-Length") == headers.end())
         {
             if(headers["Transfer-Encoding"] != "chunked")
+            {
+                std::cout<<"here7"<<std::endl;
                 status = 400;
+            }
         }
         else if(headers.find("Content-Type") == headers.end())
+        {
+            std::cout<<"here8"<<std::endl;
             status = 400;
+        }
         else if(headers["content-type"] == "boundary")
+        {
+            std::cout<<"here9"<<std::endl;
             status = 400;
+        }
     }
 
 }
@@ -555,10 +596,21 @@ void Request::set_possible_headers()
 void Request::check_headers()
 {
     std::map<std::string, std::string>::iterator it;
+    std::map<std::string, std::string>::iterator it1;
+    // for(it1 = headers.begin(); it1 != headers.end(); it1++)
+    // {
+    //     std::cout<<it1->first<<"--->"<<it1->second<<std::endl;
+    // }
+    //exit(0);
     for(it = headers.begin(); it != headers.end(); it++)
     {
+        std::cout<<it->first<<std::endl;
         if(std::find(possible_headers.begin(), possible_headers.end(), it->first) == possible_headers.end())
         {
+            std::cout<<it->first<<std::endl;
+            std::cout<<it->second<<std::endl;
+            std::cout<<"here3"<<std::endl;
+            exit(0);
             status = 400;
             return;
         }
@@ -571,6 +623,15 @@ void Request::check_path_availability()
         path = "/index.html";
     if(access((root_path + path).c_str(), F_OK) == -1)
         status = 404;
+    std::string possible_caracters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=";
+    for(int i = 0; i < path.length(); i++)
+    {
+        if(possible_caracters.find(path[i]) == std::string::npos)
+        {
+            status = 400;
+            return;
+        }
+    }
 }
 
 void Request::generate_filenames()
@@ -609,6 +670,55 @@ void Request::check_headers_content()
         if(it->first == "Content-Length")
         {
             if(it->second.find_first_not_of("0123456789") != std::string::npos)
+            {
+                status = 400;
+                return;
+            }
+        }
+    }
+}
+
+void Request::required_headers()
+{
+    std::vector<std::string> required_headers;
+    if(method == "POST")
+    {
+        required_headers.push_back("Content-Length");
+        required_headers.push_back("Content-Type");
+        required_headers.push_back("Host");
+        std::map<std::string, std::string>::iterator it;
+        for(int i = 0; i < required_headers.size(); i++)
+        {
+            it = headers.find(required_headers[i]);
+            if(it == headers.end())
+            {
+                status = 400;
+                return;
+            }
+        }
+    }
+    else if(method == "GET")
+    {
+        required_headers.push_back("Host");
+        std::map<std::string, std::string>::iterator it;
+        for(int i = 0; i < required_headers.size(); i++)
+        {
+            it = headers.find(required_headers[i]);
+            if(it == headers.end())
+            {
+                status = 400;
+                return;
+            }
+        }
+    }
+    else if(method == "DELETE")
+    {
+        required_headers.push_back("Host");
+        std::map<std::string, std::string>::iterator it;
+        for(int i = 0; i < required_headers.size(); i++)
+        {
+            it = headers.find(required_headers[i]);
+            if(it == headers.end())
             {
                 status = 400;
                 return;

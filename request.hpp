@@ -74,6 +74,7 @@ class Request{
         void check_path_availability();
         void generate_filenames();
         void check_headers_content();
+        void required_headers();
 };
 
 #endif
