@@ -138,13 +138,13 @@ int main(int ac,char **av) {
                                 current = current->getNext();
                                 continue;
                             }
-                            if(req.request_status == true)
-                            {
-                                res.SendPostResponse(fd);
-                                req.request_status = false;
-                                current = current->getNext();
-                                continue;
-                            }
+                            // if(req.request_status == true)
+                            // {
+                            //     res.SendPostResponse(fd);
+                            //     req.request_status = false;
+                            //     current = current->getNext();
+                            //     continue;
+                            // }
                         }
                         break;
                     }

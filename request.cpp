@@ -24,7 +24,9 @@ Request::Request(){
     root_path = "/home/met-tahe/Desktop/webserv";
     querystr = "";
     set_possible_headers();
+    generate_filenames();
     body_size = 0;
+    headerkey_status = false;
 }
 
 Request::Request(std::string method, std::string path, std::string version, std::map<std::string, std::string> headers, std::string body){
@@ -56,6 +58,7 @@ Request::Request(std::string method, std::string path, std::string version, std:
     querystr = "";
     set_possible_headers();
     body_size = 0;
+    headerkey_status = false;
 }
 
 std::string Request::getMethod(){
@@ -223,13 +226,17 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     content_length = std::atoi(value.c_str());
     bodylength = std::atoi(value.c_str());
     }
+   // std::cout<<"----------------------"<<std::endl;
+   // std::cout<<req<<std::endl;
+   // std::cout<<"----------------------"<<std::endl;
     //std::cout<<"------------------"<<method<<"---------------"<<std::endl;
     // if(method == "GET")
     // {
     //     CGI cgi;
     //     cgi.execute_cgi(*this);
     // }
-    check_headers();
+    if(headerkey_status == false)
+        check_headers();
     request_status_code();
     if(status != 200 && status != 201)
     {
@@ -254,7 +261,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     }
     else
     {
-        std::cout<<"here2"<<std::endl;
+        //std::cout<<"here2"<<std::endl;
         method_handler(this->method,req+i, i);
     }
     i = 0;
@@ -317,7 +324,7 @@ void Request::post_handler(char *body, int i)
     std::ofstream o;
     //generate_filenames();
     long l = std::min (content_length, (long)bytes_read - i);
-    std::string filename = "POSTd" + content_type_handler();
+    std::string filename = randfilename + content_type_handler();
 	o.open(filename.c_str(), std::ios::out | std::ios::binary | std::ios::app);
     o.write(body, l);
     o.close();
@@ -330,6 +337,7 @@ void Request::post_handler(char *body, int i)
             status = 500;
         file.seekg(0, std::ios::end);
         body_size = file.tellg();
+        file.seekg(0, std::ios::beg);
         file.close();
         if(body_size != bodylength)
             status = 400;
@@ -364,7 +372,7 @@ void Request::chunked_request_handler(char *body,int i)
     std::ofstream o;
     long readed = 0;
     long l = 0;
-    generate_filenames();
+    //generate_filenames();
     std::string filename = randfilename + content_type_handler();
     static std::string hex;
     static int hexa_end;
@@ -516,19 +524,6 @@ void Request::request_status_code()
             std::cout<<"here4"<<std::endl;
             status = 411;
         }
-        // else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") != headers.end())
-        // {
-        //     std::cout<<"here5"<<std::endl;
-        //     status = 400;
-        // }
-        // else if(headers.find("Content-Length") != headers.end() && headers.find("Transfer-Encoding") == headers.end())
-        // {
-        //     if(headers["Content-Length"] == "0")
-        //     {
-        //         std::cout<<"here6"<<std::endl;
-        //         status = 400;
-        //     }
-        // }
         else if(headers.find("Transfer-Encoding") != headers.end() && headers.find("Content-Length") == headers.end())
         {
             if(headers["Transfer-Encoding"] != "chunked")
@@ -615,6 +610,7 @@ void Request::check_headers()
             return;
         }
     }
+    headerkey_status = true;
 }
 
 void Request::check_path_availability()
@@ -638,7 +634,7 @@ void Request::generate_filenames()
 {
     const std::string caracters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
     std::srand(std::time(0));
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 6; i++) {
         randfilename += caracters[std::rand() % caracters.length()];
     }
 

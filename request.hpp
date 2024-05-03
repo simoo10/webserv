@@ -37,6 +37,7 @@ class Request{
         int iposition;
         bool hexa_status;
         bool path_status;
+        bool headerkey_status;
     public:
         std::map<std::string, std::string> headers;
     int status;
