@@ -40,6 +40,7 @@ class Request{
         bool headerkey_status;
     public:
         std::map<std::string, std::string> headers;
+        std::map<std::string,std::string>contenttype;
     int status;
         int clientSocket;
         string filename;
@@ -76,6 +77,7 @@ class Request{
         void generate_filenames();
         void check_headers_content();
         void required_headers();
+        void set_possible_conttype();
 };
 
 #endif

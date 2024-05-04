@@ -25,6 +25,7 @@ Request::Request(){
     querystr = "";
     set_possible_headers();
     generate_filenames();
+    set_possible_conttype();
     body_size = 0;
     headerkey_status = false;
 }
@@ -56,6 +57,8 @@ Request::Request(std::string method, std::string path, std::string version, std:
     clientSocket = 0;
     root_path = "/home/met-tahe/Desktop/webserv";
     querystr = "";
+    set_possible_headers();
+    set_possible_conttype();
     set_possible_headers();
     body_size = 0;
     headerkey_status = false;
@@ -238,6 +241,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     if(headerkey_status == false)
         check_headers();
     request_status_code();
+    check_headers_content();
     if(status != 200 && status != 201)
     {
         std::cout<<status<<std::endl;
@@ -292,21 +296,7 @@ void Request::method_handler(std::string method,char *body, int i)
 std::string Request::content_type_handler()
 {
     std::map<std::string, std::string>::iterator it;
-    std::map<std::string,std::string>contenttype;
-    contenttype["application/json"] = ".json";
-    contenttype["text/css"] = ".css";
-    contenttype["image/gif"] = ".gif";
-    contenttype["text/csv"] = ".csv";
-    contenttype["text/html"] = ".html";
-    contenttype["image/jpeg"] = ".jpeg";
-    contenttype["text/javascript"] = ".js";
-    contenttype["image/png"] = ".png";
-    contenttype["text/plain"] = ".txt";
-    contenttype["image/svg+xml"] = ".svg";
-    contenttype["application/pdf"] = ".pdf";
-    contenttype["image/x-icon"] = ".ico";
-    contenttype["video/mp4"] = ".mp4";
-
+   // std::map<std::string,std::string>contenttype;
     for(it = this->headers.begin(); it != this->headers.end(); it++)
     {
         if(it->first == "Content-Type")
@@ -658,16 +648,24 @@ void Request::check_headers_content()
     std::map<std::string, std::string>::iterator it;
     for(it = headers.begin(); it != headers.end(); it++)
     {
-        if(it->second.empty() || it->first.empty() || !check_space(it->first) || !check_space(it->second))
+        if(it->first == "Content-Type")
         {
-            status = 400;
-            return;
+            if(contenttype.find(it->second) == contenttype.end())
+            {
+                std::cout<<"here115"<<std::endl;
+                status = 400;
+                //exit(0);
+                return;
+            }
+            
         }
         if(it->first == "Content-Length")
         {
             if(it->second.find_first_not_of("0123456789") != std::string::npos)
             {
+                std::cout<<"here116"<<std::endl;
                 status = 400;
+               // exit(0);
                 return;
             }
         }
@@ -721,4 +719,21 @@ void Request::required_headers()
             }
         }
     }
+}
+
+void Request::set_possible_conttype()
+{
+    contenttype["application/json"] = ".json";
+    contenttype["text/css"] = ".css";
+    contenttype["image/gif"] = ".gif";
+    contenttype["text/csv"] = ".csv";
+    contenttype["text/html"] = ".html";
+    contenttype["image/jpeg"] = ".jpeg";
+    contenttype["text/javascript"] = ".js";
+    contenttype["image/png"] = ".png";
+    contenttype["text/plain"] = ".txt";
+    contenttype["image/svg+xml"] = ".svg";
+    contenttype["application/pdf"] = ".pdf";
+    contenttype["image/x-icon"] = ".ico";
+    contenttype["video/mp4"] = ".mp4";
 }
