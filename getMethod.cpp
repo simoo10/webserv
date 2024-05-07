@@ -57,7 +57,23 @@ void	getMeth(Request &req){
 	getline(File, body, '\0');
 	string statusCode = to_string(req.status);
 	string response = req.getVersion() + " " +statusCode + " " + getStatusCodeMsg(req.status) + "\r\n";
-	response += "Content-Type: " + getMimeTypes(req) + "\r\n\n";
-	response += body;
+	response += "Content-Type: " + getMimeTypes(req) + "\r\n";
+	response += "Connection: closed\r\n\n";
 	cout  << response << endl;
+	cout  << body << endl;
+	send(req.clientSocket, response.c_str(), response.size(), 0);
+	const char* data = body.c_str();
+    size_t bytesSent = 0;
+    size_t dataLength = body.size();
+    while (bytesSent < dataLength) {
+        int bytesToSend = min<int>(4096, dataLength - bytesSent);
+        int sentBytes = send(req.clientSocket, data + bytesSent, bytesToSend, 0);
+        if (sentBytes == -1){
+            perror("send");
+            break;
+        }
+        bytesSent += sentBytes;
+    }
+	File.close();
+	send(req.clientSocket, "", 1, 0);
 }
