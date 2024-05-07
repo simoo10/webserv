@@ -124,7 +124,7 @@ int main(int ac,char **av) {
                             // Process received data
                             current->getBuffer()[bytesRead] = '\0';
                             current->setBytesRead(bytesRead);
-                           // std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
+                        //    std::cout << "Received -------------------------------------------.>" << bytesRead << std::endl;
                             // reqstr.append(current->getBuffer(), bytesRead);
                             // if(reqstr.find("\r\n\r\n") == std::string::npos)
                             // {
@@ -132,7 +132,6 @@ int main(int ac,char **av) {
                             //     current = current->getNext();
                             //     continue;
                             // }
-                            
                             if(req.parseRequest(current->getBuffer(),bytesRead,config) == 1)
                             {
                                 current = current->getNext();

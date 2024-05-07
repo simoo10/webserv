@@ -14,6 +14,7 @@
 #include"cgi.hpp"
 #include <cstdlib>
 #include <ctime>
+#include "getMethod.hpp"
 using namespace std;
 
 class GlobalConfig;

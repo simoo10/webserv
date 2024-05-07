@@ -7,6 +7,7 @@ SRC		= message.cpp\
 			response.cpp\
 			config.cpp\
 			cgi.cpp\
+			getMethod.cpp \
 
 OBJ	= $(SRC:.cpp=.o)
 

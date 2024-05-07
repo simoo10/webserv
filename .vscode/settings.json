@@ -50,6 +50,7 @@
         "typeinfo": "cpp",
         "set": "cpp",
         "csignal": "cpp",
-        "ctime": "cpp"
+        "ctime": "cpp",
+        "optional": "cpp"
     }
 }

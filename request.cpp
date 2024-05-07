@@ -3,7 +3,7 @@
 #include"config.hpp"
 Request::Request(){
     this->method = "";
-    this->path = "";
+    this->path = "/home/akhi/Desktop/webserv/www";
     this->version = "";
     this->headers = std::map<std::string, std::string>();
     this->body = "";
@@ -21,7 +21,7 @@ Request::Request(){
     request_status = false;
     check = false;
     clientSocket = 0;
-    root_path = "/home/met-tahe/Desktop/webserv";
+    root_path = "/home/akhi/Desktop/webserv/www"; //need to update after generating request 
     querystr = "";
     set_possible_headers();
     generate_filenames();
@@ -54,7 +54,7 @@ Request::Request(std::string method, std::string path, std::string version, std:
     request_status = false;
     check = false;
     clientSocket = 0;
-    root_path = "/home/met-tahe/Desktop/webserv";
+    root_path = "/home/akhi/Desktop/webserv/www"; //need to update after generating request
     querystr = "";
     set_possible_headers();
     body_size = 0;
@@ -220,7 +220,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
         {
             return (1);
         }
-        //std::cout<<"----------------------"<<std::endl;
+        // std::cout<<"----------------------"<<std::endl;
         i = parseheaders(reqstr,config);
     std::string value = headers["Content-Length"];
     content_length = std::atoi(value.c_str());
@@ -229,7 +229,7 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
    // std::cout<<"----------------------"<<std::endl;
    // std::cout<<req<<std::endl;
    // std::cout<<"----------------------"<<std::endl;
-    //std::cout<<"------------------"<<method<<"---------------"<<std::endl;
+    // std::cout<<"------------------"<<method<<"---------------"<<std::endl;
     // if(method == "GET")
     // {
     //     CGI cgi;
@@ -261,11 +261,11 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     }
     else
     {
-        //std::cout<<"here2"<<std::endl;
+        std::cout<<"here2"<<std::endl;
         method_handler(this->method,req+i, i);
     }
     i = 0;
-    //std::cout<<"----------------------"<<std::endl;
+    // std::cout<<"----------------------"<<std::endl;
     return(0);
 }
 
@@ -273,7 +273,7 @@ void Request::method_handler(std::string method,char *body, int i)
 {
     if(method == "GET")
     {
-        //
+        getMeth(*this);
     }
     else if(method == "DELETE")
     {
@@ -617,8 +617,11 @@ void Request::check_path_availability()
 {
     if(path == "/")
         path = "/index.html";
-    if(access((root_path + path).c_str(), F_OK) == -1)
+    if(access((root_path + path).c_str(), F_OK) == -1){
         status = 404;
+    }
+    else
+        path = root_path + path;
     std::string possible_caracters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=";
     for(int i = 0; i < path.length(); i++)
     {
