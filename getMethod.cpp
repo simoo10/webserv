@@ -50,15 +50,25 @@ string	getStatusCodeMsg(int status){
 }
 
 void	getMeth(Request &req){
+	cout << "right here mfs\n";
 	ifstream File(req.getPath().c_str());
 	string body;
 	if (!File.is_open())
 		cerr << "Failed to open file\n";
-	getline(File, body, '\0');
 	string statusCode = to_string(req.status);
-	string response = req.getVersion() + " " +statusCode + " " + getStatusCodeMsg(req.status) + "\r\n";
-	response += "Content-Type: " + getMimeTypes(req) + "\r\n";
-	response += "Connection: closed\r\n\n";
+	string response = req.getVersion() + " " + statusCode + " " + getStatusCodeMsg(req.status) + "\r\n";
+	if (req.status == 200){
+		getline(File, body, '\0');
+		response += "Content-Type: " + getMimeTypes(req) + "\r\n";
+	}
+	else if (req.status == 404){
+		ifstream notFound("error_pages/notfound.html");
+		if (!notFound.is_open())
+			cerr << "Failed to open file\n";
+		response += "Content-Type: text/html\r\n";
+		getline(notFound, body, '\0');
+	}
+	response += "Connection: close\r\n\n";
 	cout  << response << endl;
 	cout  << body << endl;
 	send(req.clientSocket, response.c_str(), response.size(), 0);

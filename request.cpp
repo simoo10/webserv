@@ -238,13 +238,13 @@ int Request::parseRequest(char *req,int bytesRead,GlobalConfig &config)
     if(headerkey_status == false)
         check_headers();
     request_status_code();
-    if(status != 200 && status != 201)
-    {
+    // if(status != 200 && status != 201)
+    // {
         std::cout<<status<<std::endl;
         //std::cout<<"here1"<<std::endl;
         //send error response;
-        return(0);
-    }
+    //     return(0);
+    // }
     if(headers["Content-Length"] == "0" && method == "POST")
     {
         status = 400;
@@ -617,11 +617,9 @@ void Request::check_path_availability()
 {
     if(path == "/")
         path = "/index.html";
-    if(access((root_path + path).c_str(), F_OK) == -1){
+    if(access((root_path + path).c_str(), F_OK) == -1)
         status = 404;
-    }
-    else
-        path = root_path + path;
+    path = root_path + path;
     std::string possible_caracters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=";
     for(int i = 0; i < path.length(); i++)
     {
