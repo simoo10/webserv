@@ -61,12 +61,14 @@ void	getMeth(Request &req){
 		getline(File, body, '\0');
 		response += "Content-Type: " + getMimeTypes(req) + "\r\n";
 	}
-	else if (req.status == 404){
-		ifstream notFound("error_pages/notfound.html");
-		if (!notFound.is_open())
-			cerr << "Failed to open file\n";
-		response += "Content-Type: text/html\r\n";
-		getline(notFound, body, '\0');
+	else{
+		if (req.status == 404){
+			ifstream notFound("error_pages/notfound.html");
+			if (!notFound.is_open())
+				cerr << "Failed to open file\n";
+			response += "Content-Type: text/html\r\n";
+			getline(notFound, body, '\0');
+		}
 	}
 	response += "Connection: close\r\n\n";
 	cout  << response << endl;
