@@ -18,6 +18,7 @@ int main(int ac,char **av) {
     signal(SIGPIPE, SIG_IGN);
     if(ac != 2)
            throw std::runtime_error("./webserv [configuration file]");
+    try{
         GlobalConfig config(av[1]);
         for(it_servers = config.servers.begin();it_servers !=config.servers.end() ; it_servers++ )
         {
@@ -167,6 +168,10 @@ int main(int ac,char **av) {
     // Close the server socket
     close(serverSocket);
     close(epollFd);
+    }
+    catch(exception &e){
+        cout << e.what() << endl;
+    }
 
     return 0;
 }
