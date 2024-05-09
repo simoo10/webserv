@@ -3,7 +3,7 @@
 #include"config.hpp"
 Request::Request(){
     this->method = "";
-    this->path = "/home/akhi/Desktop/webserv/www";
+    this->path = "/home/kali/Desktop/webserv/www";
     this->version = "";
     this->headers = std::map<std::string, std::string>();
     this->body = "";
@@ -21,7 +21,7 @@ Request::Request(){
     request_status = false;
     check = false;
     clientSocket = 0;
-    root_path = "/home/akhi/Desktop/webserv/www"; //need to update after generating request 
+    root_path = "/home/kali/Desktop/webserv/www"; //need to update after generating request 
     querystr = "";
     set_possible_headers();
     generate_filenames();
@@ -54,7 +54,7 @@ Request::Request(std::string method, std::string path, std::string version, std:
     request_status = false;
     check = false;
     clientSocket = 0;
-    root_path = "/home/akhi/Desktop/webserv/www"; //need to update after generating request
+    root_path = "/home/kali/Desktop/webserv/www"; //need to update after generating request
     querystr = "";
     set_possible_headers();
     body_size = 0;

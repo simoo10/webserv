@@ -1,6 +1,6 @@
 #include "getMethod.hpp"
 
-string	getMimeTypes(Request &req){
+string	getMimeTypes(string path){
 	ifstream file("mime.types");
 	if(!file.is_open())
 		cerr << "Could not open file";
@@ -19,7 +19,7 @@ string	getMimeTypes(Request &req){
 		extention = &extention[i];
 		mime[extention] = value;
 	}
-	string path = req.getPath().substr(req.getPath().find_last_of('.') + 1);
+	string ext = path.substr(path.find_last_of('.') + 1);
 	for (std::map<std::string, std::string>::const_iterator it = mime.begin(); it != mime.end(); ++it) {
 		if (it->first.find(path) != std::string::npos)
 			return it->second;
@@ -32,6 +32,8 @@ string	getStatusCodeMsg(int status){
 		return "Moved Permanently";
 	if (status == 200)
 		return "OK";
+	if (status == 403)
+		return "Forbidden";
 	if (status == 404)
 		return "Not Found";
 	if (status == 500)
@@ -51,12 +53,16 @@ string	getStatusCodeMsg(int status){
 	return "";
 }
 
-bool	isDir(const char *path){
+int	isDir(const char *path){
 	struct stat statbuf;
-	if (stat(path, &statbuf) == 0)
-    	return S_ISDIR(statbuf.st_mode);
-  	else
-    	return false;
+	if (lstat(path, &statbuf) == 0)
+	{
+		if (S_ISDIR(statbuf.st_mode))
+    		return 1;
+  		else if (S_ISREG(statbuf.st_mode))
+    		return 2;
+	}
+	return 0;
 }
 
 
@@ -73,34 +79,70 @@ bool hasFiles(const char *dirPath) {
 			break;
 		}
 		closedir(dir);
-	} 
+	}
 	else
 		return false;
 	return has_files;
 }
 
+string	hasIndexFile(const char *dirPath){
+	DIR *dir;
+	struct dirent *ent;
+	vector<string> filenames;
+	dir = opendir(dirPath);
+	while ((ent = readdir(dir))){
+		filenames.push_back(ent->d_name);
+	}
+	closedir(dir);
+	for(const string filename : filenames){
+		string filename_lowcase = filename;
+		transform(filename_lowcase.begin(), filename_lowcase.end(), filename_lowcase.begin(), ::tolower);
+		if (filename_lowcase == "index.html" || filename_lowcase == "index.htm")
+			return filename_lowcase;
+	}
+	return "";
+}
+
 void	getMeth(Request &req){
-	bool checkDir = false, dirContent = false;
+	int checkDir = 0;
+	bool dirContent = false;
 	ifstream File;
+	string body;
+	string indexFile = "";
 	checkDir = isDir(req.getPath().c_str());
-	if (!checkDir){
+	if (checkDir == 2){
 		File.open(req.getPath().c_str());
 		if (!File.is_open())
 			cerr << "Failed to open file\n";
 	}
-	else{
+	else if (checkDir == 1){
 		if (req.getPath()[req.getPath().size() - 1] != '/')
 			req.status = 301;
-		else
+		else{
 			dirContent = hasFiles(req.getPath().c_str());
+			if (dirContent){
+				indexFile = hasIndexFile(req.getPath().c_str());
+				if (!indexFile.empty()){
+					File.open(req.getPath().c_str() + indexFile);
+					if (!File.is_open())
+						cerr << "Failed to open file\n";
+				}
+			}
+			else
+				req.status = 404;
+		}
 	}
+	else if (checkDir == 3)
+		cout << "Invalid File or Directory\n";
 	cout << req.getPath() << endl;
-	string body;
 	string statusCode = to_string(req.status);
 	string response = req.getVersion() + " " + statusCode + " " + getStatusCodeMsg(req.status) + "\r\n";
 	if (req.status == 200){
 		getline(File, body, '\0');
-		response += "Content-Type: " + getMimeTypes(req) + "\r\n";
+		if (!indexFile.empty())
+			response += "Content-type: text/html\r\n";
+		else
+			response += "Content-Type: " + getMimeTypes(req.getPath()) + "\r\n";
 	}
 	else if (req.status != 301){
 		response += "Content-Type: text/html\r\n";
@@ -135,6 +177,6 @@ void	getMeth(Request &req){
         bytesSent += sentBytes;
     }
 	send(req.clientSocket, "", 1, 0);
-	File.close();
 	close(req.clientSocket);
+	File.close();
 }
