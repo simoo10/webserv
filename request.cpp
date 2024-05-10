@@ -605,9 +605,9 @@ void Request::check_headers()
             std::cout<<it->first<<std::endl;
             std::cout<<it->second<<std::endl;
             std::cout<<"here3"<<std::endl;
-            exit(0);
-            status = 400;
-            return;
+            // exit(0);
+            // status = 400;
+            // return;
         }
     }
     headerkey_status = true;

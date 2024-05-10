@@ -21,7 +21,7 @@ string	getMimeTypes(string path){
 	}
 	string ext = path.substr(path.find_last_of('.') + 1);
 	for (std::map<std::string, std::string>::const_iterator it = mime.begin(); it != mime.end(); ++it) {
-		if (it->first.find(path) != std::string::npos)
+		if (it->first.find(ext) != std::string::npos)
 			return it->second;
 	}
 	return "application/octet-stream";
@@ -103,7 +103,14 @@ string	hasIndexFile(const char *dirPath){
 	return "";
 }
 
+string	toHex(int size){
+	stringstream toHex;
+	toHex << hex << size;
+	return toHex.str();
+}
+
 void	getMeth(Request &req){
+	Get	get;
 	int checkDir = 0;
 	bool dirContent = false;
 	ifstream File;
@@ -140,7 +147,7 @@ void	getMeth(Request &req){
 	if (req.status == 200){
 		getline(File, body, '\0');
 		if (!indexFile.empty())
-			response += "Content-type: text/html\r\n";
+			response += "Content-Type: " + getMimeTypes(indexFile) + "\r\n";
 		else
 			response += "Content-Type: " + getMimeTypes(req.getPath()) + "\r\n";
 	}
@@ -161,22 +168,45 @@ void	getMeth(Request &req){
 	}
 	else
 		response += "Location: " + req.getPath().substr(req.getPath().find_last_of('/')) + "/\r\n";
+	response += "Transfer-Encoding: chunked\r\n";
 	response += "Connection: close\r\n\n";
 	cout  << response << endl;
-	send(req.clientSocket, response.c_str(), response.size(), 0);
 	const char* data = body.c_str();
     size_t bytesSent = 0;
     size_t dataLength = body.size();
-    while (bytesSent < dataLength) {
-        int bytesToSend = min<int>(4096, dataLength - bytesSent);
-        int sentBytes = send(req.clientSocket, data + bytesSent, bytesToSend, 0);
-        if (sentBytes == -1){
-            perror("send");
-            break;
-        }
-        bytesSent += sentBytes;
-    }
+	if (!get.getResponseFlag()){
+		send(req.clientSocket, response.c_str(), response.size(), 0);
+		get.setResponseFlag(true);
+	}
+	while (bytesSent < dataLength){
+		int bytesToSend = min<int>(1024, dataLength - bytesSent);
+		std::string chunkSize = toHex(bytesToSend);
+		send(req.clientSocket, chunkSize.c_str(), chunkSize.size(), 0);
+		send(req.clientSocket, "\r\n", 2, 0);
+		int totalSent = 0;
+		while (totalSent < bytesToSend){
+			int sentBytes = send(req.clientSocket, data + bytesSent + totalSent, bytesToSend - totalSent, 0);
+			if (sentBytes == -1){
+				perror("send");
+				break;
+			}
+			totalSent += sentBytes;
+		}
+		bytesSent += bytesToSend;
+	}
+	File.close();
 	send(req.clientSocket, "", 1, 0);
 	close(req.clientSocket);
-	File.close();
+}
+
+Get::Get(){
+	flagResponse = false;
+}
+
+bool	Get::getResponseFlag(){
+	return flagResponse;
+}
+
+void	Get::setResponseFlag(bool flag){
+	flagResponse = flag;
 }
