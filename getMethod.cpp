@@ -1,7 +1,7 @@
 #include "getMethod.hpp"
 
 string	getMimeTypes(string path){
-	ifstream file("mime.types");
+	ifstream file("conf/mime.types");
 	if(!file.is_open())
 		cerr << "Could not open file";
 	string content;

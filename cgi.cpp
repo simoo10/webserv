@@ -85,7 +85,7 @@ void CGI::execute_cgi(Request &req)
 {
     int waitstatus;
     pid_t pid;
-    int fdfile = open("cgifile.cgi", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    int fdfile = open("conf/cgifile.cgi", O_CREAT | O_WRONLY | O_TRUNC, 0644);
     envirement_init(req);
     take_args(req);
 
