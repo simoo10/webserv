@@ -217,19 +217,26 @@ void	deleteMeth(Request &req){
 				if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
 					ent = readdir(dir);
 				deleted = remove((req.getPath() + ent->d_name).c_str());
-				cout << "DELETED: " << deleted << " filename:  " << ent->d_name << endl;
+				if (deleted == -1)
+					break ;
 			}
 		}
 	}
 	else
 		req.status = 404;
-	if (deleted == 0)
+	if (deleted == 0){
 		req.status = 204;
-	string response;
-	response = req.getVersion() + " " + to_string(req.status) + " " + getStatusCodeMsg(req.status) + "\r\n\n";
-	response += "<html><body><h1>File deleted!</h1></body></html>\n";
-	cout << response << endl;
-	send(req.clientSocket, response.c_str(), response.size(), 0);
-	send(req.clientSocket, "", 1, 0);
-	close(req.clientSocket);
+		string response;
+		response = req.getVersion() + " " + to_string(req.status) + " " + getStatusCodeMsg(req.status) + "\r\n\n";
+		ifstream File;
+		File.open("error_pages/deleted.html");
+		if (!File.is_open())
+			cerr << "Failed to open file\n";
+		string body;
+		getline(File, body, '\0');
+		send(req.clientSocket, response.c_str(), response.size(), 0);
+		send(req.clientSocket, body.c_str(), body.size(), 0);
+		send(req.clientSocket, "", 1, 0);
+		close(req.clientSocket);
+	}
 }
