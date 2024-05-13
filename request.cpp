@@ -140,7 +140,7 @@ int Request::parseheaders(std::string req,GlobalConfig &config)
         }
         i++;
     }
-    if(method == "GET" || method == "POST")
+    if(method == "" || method == "POST")
     {
         if(method == "POST")
             status = 201;
@@ -694,32 +694,32 @@ void Request::required_headers()
             }
         }
     }
-    else if(method == "GET")
-    {
-        required_headers.push_back("Host");
-        std::map<std::string, std::string>::iterator it;
-        for(int i = 0; i < required_headers.size(); i++)
-        {
-            it = headers.find(required_headers[i]);
-            if(it == headers.end())
-            {
-                status = 400;
-                return;
-            }
-        }
-    }
-    else if(method == "DELETE")
-    {
-        required_headers.push_back("Host");
-        std::map<std::string, std::string>::iterator it;
-        for(int i = 0; i < required_headers.size(); i++)
-        {
-            it = headers.find(required_headers[i]);
-            if(it == headers.end())
-            {
-                status = 400;
-                return;
-            }
-        }
-    }
+    // else if(method == "GET")
+    // {
+    //     required_headers.push_back("Host");
+    //     std::map<std::string, std::string>::iterator it;
+    //     for(int i = 0; i < required_headers.size(); i++)
+    //     {
+    //         it = headers.find(required_headers[i]);
+    //         if(it == headers.end())
+    //         {
+    //             status = 400;
+    //             return;
+    //         }
+    //     }
+    // }
+    // else if(method == "DELETE")
+    // {
+    //     required_headers.push_back("Host");
+    //     std::map<std::string, std::string>::iterator it;
+    //     for(int i = 0; i < required_headers.size(); i++)
+    //     {
+    //         it = headers.find(required_headers[i]);
+    //         if(it == headers.end())
+    //         {
+    //             status = 400;
+    //             return;
+    //         }
+    //     }
+    // }
 }

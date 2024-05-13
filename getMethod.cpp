@@ -124,6 +124,8 @@ void	getMeth(Request &req){
 		File.open(req.getPath().c_str());
 		if (!File.is_open())
 			cerr << "Failed to open file\n";
+		else
+			req.status = 200;
 	}
 	else if (checkDir == 1){
 		if (req.getPath()[req.getPath().size() - 1] != '/')
@@ -200,7 +202,6 @@ void	getMeth(Request &req){
 }
 
 void	deleteMeth(Request &req){
-	cout << "path to delete: " << req.getPath() << endl;
 	int checkDir = isDir(req.getPath().c_str());
 	int	deleted = -1;
 	if (checkDir == 2)
@@ -212,12 +213,23 @@ void	deleteMeth(Request &req){
 			DIR *dir;
 			struct dirent *ent;
 			dir = opendir(req.getPath().c_str());
-			while(ent = readdir(dir))
-				deleted = remove((req.getPath() + ent->d_name).c_str());
+			while(ent = readdir(dir)){
+				if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
+					continue;
+				else
+					deleted = remove((req.getPath() + ent->d_name).c_str());
+			}
 		}
 	}
 	else
 		req.status = 404;
 	if (deleted == 0)
 		req.status = 204;
+	string response;
+	response = req.getVersion() + " " + to_string(req.status) + " " + getStatusCodeMsg(req.status) + "\r\n\n";
+	response += "<html><body><h1>File deleted!</h1></body></html>\n";
+	cout << response << endl;
+	send(req.clientSocket, response.c_str(), response.size(), 0);
+	send(req.clientSocket, "", 1, 0);
+	close(req.clientSocket);
 }
