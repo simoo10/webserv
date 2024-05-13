@@ -215,9 +215,9 @@ void	deleteMeth(Request &req){
 			dir = opendir(req.getPath().c_str());
 			while(ent = readdir(dir)){
 				if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
-					continue;
-				else
-					deleted = remove((req.getPath() + ent->d_name).c_str());
+					ent = readdir(dir);
+				deleted = remove((req.getPath() + ent->d_name).c_str());
+				cout << "DELETED: " << deleted << " filename:  " << ent->d_name << endl;
 			}
 		}
 	}
