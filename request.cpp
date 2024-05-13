@@ -277,7 +277,7 @@ void Request::method_handler(std::string method,char *body, int i)
     }
     else if(method == "DELETE")
     {
-        //
+        deleteMeth(*this);
     }
     else if(method == "POST")
     {

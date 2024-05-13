@@ -14,13 +14,5 @@ using namespace std;
 
 class Request;
 
-class Get{
-	private:
-		bool flagResponse;
-	public:
-		Get();
-		bool	getResponseFlag();
-		void	setResponseFlag(bool flag);
-};
-
 void	getMeth(Request &req);
+void	deleteMeth(Request &req);

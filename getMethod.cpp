@@ -32,6 +32,8 @@ string	getStatusCodeMsg(int status){
 		return "Moved Permanently";
 	if (status == 200)
 		return "OK";
+	if (status == 204)
+		return "No Content";
 	if (status == 403)
 		return "Forbidden";
 	if (status == 404)
@@ -46,6 +48,8 @@ string	getStatusCodeMsg(int status){
 		return "Created";
 	if (status == 400)
 		return "Bad Request";
+	if (status == 409)
+		return "Conflict";
 	if (status == 414)
 		return "URI Too Long";
 	if (status == 411)
@@ -66,13 +70,13 @@ int	isDir(const char *path){
 }
 
 
-bool hasFiles(const char *dirPath) {
+bool hasFiles(const char *dirPath){
 	DIR *dir;
 	struct dirent *ent;
 	bool has_files = false;
 	dir = opendir(dirPath);
 	if (dir){
-		while ((ent = readdir(dir))){
+		while (ent = readdir(dir)){
 			if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0)
 				continue;
 			has_files = true;
@@ -90,7 +94,7 @@ string	hasIndexFile(const char *dirPath){
 	struct dirent *ent;
 	vector<string> filenames;
 	dir = opendir(dirPath);
-	while ((ent = readdir(dir))){
+	while (ent = readdir(dir)){
 		filenames.push_back(ent->d_name);
 	}
 	closedir(dir);
@@ -110,7 +114,6 @@ string	toHex(int size){
 }
 
 void	getMeth(Request &req){
-	Get	get;
 	int checkDir = 0;
 	bool dirContent = false;
 	ifstream File;
@@ -125,7 +128,7 @@ void	getMeth(Request &req){
 	else if (checkDir == 1){
 		if (req.getPath()[req.getPath().size() - 1] != '/')
 			req.status = 301;
-		else{
+		else if (req.getPath()[req.getPath().size() - 1] == '/'){
 			dirContent = hasFiles(req.getPath().c_str());
 			if (dirContent){
 				indexFile = hasIndexFile(req.getPath().c_str());
@@ -174,10 +177,7 @@ void	getMeth(Request &req){
 	const char* data = body.c_str();
     size_t bytesSent = 0;
     size_t dataLength = body.size();
-	if (!get.getResponseFlag()){
-		send(req.clientSocket, response.c_str(), response.size(), 0);
-		get.setResponseFlag(true);
-	}
+	send(req.clientSocket, response.c_str(), response.size(), 0);
 	while (bytesSent < dataLength){
 		int bytesToSend = min<int>(1024, dataLength - bytesSent);
 		std::string chunkSize = toHex(bytesToSend);
@@ -199,14 +199,25 @@ void	getMeth(Request &req){
 	close(req.clientSocket);
 }
 
-Get::Get(){
-	flagResponse = false;
-}
-
-bool	Get::getResponseFlag(){
-	return flagResponse;
-}
-
-void	Get::setResponseFlag(bool flag){
-	flagResponse = flag;
+void	deleteMeth(Request &req){
+	cout << "path to delete: " << req.getPath() << endl;
+	int checkDir = isDir(req.getPath().c_str());
+	int	deleted = -1;
+	if (checkDir == 2)
+		deleted = remove(req.getPath().c_str());
+	else if (checkDir == 1){
+		if (req.getPath()[req.getPath().size() - 1] != '/')
+			req.status = 409;
+		else{
+			DIR *dir;
+			struct dirent *ent;
+			dir = opendir(req.getPath().c_str());
+			while(ent = readdir(dir))
+				deleted = remove((req.getPath() + ent->d_name).c_str());
+		}
+	}
+	else
+		req.status = 404;
+	if (deleted == 0)
+		req.status = 204;
 }
